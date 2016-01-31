@@ -67,19 +67,32 @@ class LogicalExpressionsTest {
     }
 
     @Test
-    def createSubstitutions(): Unit = {
-        var subs = new LogicalExpressions(null).createSubstitutions(
+    def createSubstitutions1(): Unit = {
+        val sub1 = new LogicalExpressions(null).createSubstitution(
             (X is B) & (Y is D),
             (A is B) & (C is D)
-        )
-        Assert.assertEquals(A, subs.get(X))
-        Assert.assertEquals(C, subs.get(Y))
+        ).get
+        Assert.assertEquals(A, sub1.get(X).get)
+        Assert.assertEquals(C, sub1.get(Y).get)
+    }
 
-        subs = new LogicalExpressions(null).createSubstitutions(
+    @Test
+    def createSubstitutions2(): Unit = {
+        val sub2 = new LogicalExpressions(null).createSubstitution(
             (X is B) & (X is D),
             (A is B) & (C is D)
         )
-        Assert.assertEquals(None, subs)
+        Assert.assertEquals(None, sub2)
+    }
+
+    @Test
+    def createSubstitutions3(): Unit = {
+        val sub1 = new LogicalExpressions(null).createSubstitution(
+            (X is B) & (Y is D),
+            (A is B) & (Z is D)
+        ).get
+        Assert.assertEquals(A, sub1.get(X).get)
+        Assert.assertEquals(Z, sub1.get(Y).get)
     }
 
     @Test

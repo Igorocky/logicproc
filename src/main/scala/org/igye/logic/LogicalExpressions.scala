@@ -1,7 +1,6 @@
 package org.igye.logic
 
 import org.igye.logic.LogicOperators.{&, or, toDnf}
-import org.igye.logic.LogicalOperationsOnPredicate._
 
 class LogicalExpressions(predicateStorage: PredicateStorage) {
     def applyRule(rule: Rule): List[Predicate] = {
@@ -11,21 +10,22 @@ class LogicalExpressions(predicateStorage: PredicateStorage) {
     private def applySubRule(rule: Rule): List[Predicate] = {
         val subConjList = conjToList(rule.condition)
         val substitutions = subConjList.tail.foldLeft{
-            predicateStorage.getTrueStatements.flatMap(createSubstitutions(subConjList.head, _))
+            predicateStorage.getTrueStatements.flatMap(createSubstitution(subConjList.head, _))
         }{
             case (mappings, conj) =>
-                mappings.flatMap{map=>
-                    predicateStorage.getTrueStatements.flatMap(createSubstitutions(conj, _, map))
+                mappings.flatMap{sub=>
+                    predicateStorage.getTrueStatements.flatMap(createSubstitution(conj, _, Some(sub)))
                 }
         }
-        substitutions.map(replacePlaceholders(rule.result, _))
+        substitutions.map(applySubstitution(rule.result, _))
     }
 
-    def replacePlaceholders(pattern: Predicate, subs: Map[Placeholder, Predicate]): Predicate = {
-        pattern.copy(pattern.orderedChildren.map{
-            case ph: Placeholder => subs(ph)
-            case pr: Predicate => replacePlaceholders(pr, subs)
-        })
+    def applySubstitution(pr: Predicate, sub: Substitution): Predicate = {
+        sub.get(pr).getOrElse{
+            pr.copy(pr.orderedChildren.map{
+                case pr: Predicate => sub.get(pr).getOrElse(applySubstitution(pr, sub))
+            })
+        }
     }
 
     def eval(exp: Predicate): Option[Boolean] = {
@@ -44,31 +44,39 @@ class LogicalExpressions(predicateStorage: PredicateStorage) {
         }
     }
 
-    def createSubstitutions(pattern: Predicate, target: Predicate,
-                            existingMapping: Map[Placeholder, Predicate] = Map()): Option[Map[Placeholder, Predicate]] = {
-        if (pattern.orderedChildren.length != target.orderedChildren.length ||
-                pattern.getClass != target.getClass ||
-            pattern.orderedChildren.isEmpty && pattern != target) {
+    def createSubstitution(fromPr: Predicate, toPr: Predicate,
+                           parent: Option[Substitution] = None): Option[Substitution] = {
+        if (fromPr.orderedChildren.length != toPr.orderedChildren.length ||
+                fromPr.getClass != toPr.getClass ||
+            fromPr.orderedChildren.isEmpty && fromPr != toPr) {
             None
+        } else if (fromPr == toPr) {
+            Some(Substitution(from = fromPr, to = toPr, map = Map(), parent))
         } else {
-            Some(pattern.orderedChildren.zip(target.orderedChildren).foldLeft(existingMapping){
+            fromPr.orderedChildren.zip(toPr.orderedChildren).foldLeft(parent){
                 case (soFarRes, currPair) =>
                     currPair match {
-                        case (ph: Placeholder, pr: Predicate) =>
-                            if (soFarRes.contains(ph) && soFarRes(ph) != pr) {
+                        case (from: Placeholder, to: Predicate) =>
+                            if (soFarRes.exists(_.contradicts(from, to))) {
                                 return None
                             } else {
-                                soFarRes + (ph -> pr)
+                                Some(Substitution(from = from, to = to, map = Map(from -> to), parent = soFarRes))
                             }
-                        case (pattPr: Predicate, targPr: Predicate) =>
-                            val childRes = createSubstitutions(pattPr, targPr, soFarRes)
+                        case (from: Predicate, to: Placeholder) =>
+                            if (soFarRes.exists(_.contradicts(from, to))) {
+                                return None
+                            } else {
+                                Some(Substitution(from = from, to = to, map = Map(from -> to), parent = soFarRes))
+                            }
+                        case (fromPr: Predicate, toPr: Predicate) =>
+                            val childRes = createSubstitution(fromPr, toPr, soFarRes)
                             if (childRes.isEmpty) {
                                 return None
                             } else {
-                                soFarRes ++ childRes.get
+                                childRes
                             }
                     }
-            })
+            }.map(s => Substitution(from = fromPr, to = toPr, map = s.flattenMap, parent))
         }
     }
 
