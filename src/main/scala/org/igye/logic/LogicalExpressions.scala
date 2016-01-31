@@ -11,13 +11,11 @@ class LogicalExpressions(predicateStorage: PredicateStorage) {
     private def applySubRule(rule: Rule): List[Predicate] = {
         val subConjList = conjToList(rule.condition)
         val substitutions = subConjList.tail.foldLeft{
-            (predicateStorage.getTrueStatements:::
-                predicateStorage.getFalseStatements.map(!_)).flatMap(createSubstitutions(subConjList.head, _))
+            predicateStorage.getTrueStatements.flatMap(createSubstitutions(subConjList.head, _))
         }{
             case (mappings, conj) =>
                 mappings.flatMap{map=>
-                    (predicateStorage.getTrueStatements:::
-                        predicateStorage.getFalseStatements.map(!_)).flatMap(createSubstitutions(conj, _, map))
+                    predicateStorage.getTrueStatements.flatMap(createSubstitutions(conj, _, map))
                 }
         }
         substitutions.map(replacePlaceholders(rule.result, _))

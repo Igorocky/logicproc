@@ -1,13 +1,12 @@
 package org.igye.logic
 
-import org.igye.logic.LogicOperators.!
+import org.igye.logic.LogicOperators._
+import org.igye.logic.LogicalOperationsOnPredicate.predicateToLogicalOperationsOnPredicate
 
 class PredicateStorage {
     private var knownTrueStatements = List[Predicate]()
-    private var knownFalseStatements = List[Predicate]()
 
     def getTrueStatements = knownTrueStatements
-    def getFalseStatements = knownFalseStatements
 
     private def save(stmt: Predicate, isTrue: Boolean): Unit = {
         val (norm, inverted) = normalize(stmt)
@@ -16,11 +15,7 @@ class PredicateStorage {
         if (contradictsTo.isDefined) {
             throw new IllegalArgumentException(s"statement [$stmt is $isTrue] contradicts to [${contradictsTo.get} is ${!isTrueNorm}]")
         }
-        if (isTrueNorm) {
-            knownTrueStatements ::= norm
-        } else {
-            knownFalseStatements ::= norm
-        }
+        knownTrueStatements ::= (if (isTrueNorm) norm else !norm)
     }
 
     def saveTrue(pr: Predicate): Unit = {
@@ -38,10 +33,7 @@ class PredicateStorage {
         knownTrueStatements.foreach{stmt=>
             if (stmt == normalizedPr) {
                 return Some(!invertRes)
-            }
-        }
-        knownFalseStatements.foreach{stmt=>
-            if (stmt == normalizedPr) {
+            } else if (stmt == !normalizedPr) {
                 return Some(invertRes)
             }
         }
@@ -54,10 +46,7 @@ class PredicateStorage {
     }
 
     private def contradicts(normalizedStmt: Predicate, isTrue: Boolean): Option[Predicate] = {
-        if (isTrue) {
-            knownFalseStatements.find(_ == normalizedStmt)
-        } else {
-            knownTrueStatements.find(_ == normalizedStmt)
-        }
+        val invStmt = (if (isTrue) !normalizedStmt else normalizedStmt)
+        knownTrueStatements.find(_ == invStmt)
     }
 }
