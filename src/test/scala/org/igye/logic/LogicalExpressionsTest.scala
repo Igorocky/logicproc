@@ -142,7 +142,7 @@ class LogicalExpressionsTest {
         )
         val qRes = LogicalExpressions.query(
             (X is E) & (X is D)
-        )
+        ).map(_.flattenMap)
         Assert.assertEquals(2, qRes.length)
         Assert.assertTrue(qRes.contains(Map(X -> A)))
         Assert.assertTrue(qRes.contains(Map(X -> C)))

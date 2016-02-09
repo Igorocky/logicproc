@@ -4,10 +4,9 @@ import org.igye.logic.LogicOperators.{&, or, toDnf}
 import org.igye.logic.LogicalOperationsOnPredicate.predicateToLogicalOperationsOnPredicate
 
 object LogicalExpressions {
-    def query(query: Predicate)(implicit predicateStorage: PredicateStorage): List[Map[Predicate, Predicate]] = {
+    def query(query: Predicate)(implicit predicateStorage: PredicateStorage): List[Substitution] = {
         predicateStorage.getTrueStatements.flatMap(createSubstitution(query, _))
-            .map(_.flattenMap)
-            .filter(!_.values.exists(_.isInstanceOf[Placeholder]))
+            .filter(!_.flattenMap.values.exists(_.isInstanceOf[Placeholder]))
     }
 
     def applyRule(rule: Rule)(implicit predicateStorage: PredicateStorage): List[Predicate] = {
