@@ -3,18 +3,18 @@ package org.igye.logic
 import org.igye.logic.LogicOperators.{&, or, toDnf}
 import org.igye.logic.LogicalOperationsOnPredicate.predicateToLogicalOperationsOnPredicate
 
-class LogicalExpressions(predicateStorage: PredicateStorage = new PredicateStorage) {
-    def query(query: Predicate): List[Map[Predicate, Predicate]] = {
+object LogicalExpressions {
+    def query(query: Predicate)(implicit predicateStorage: PredicateStorage): List[Map[Predicate, Predicate]] = {
         predicateStorage.getTrueStatements.flatMap(createSubstitution(query, _))
             .map(_.flattenMap)
             .filter(!_.values.exists(_.isInstanceOf[Placeholder]))
     }
 
-    def applyRule(rule: Rule): List[Predicate] = {
+    def applyRule(rule: Rule)(implicit predicateStorage: PredicateStorage): List[Predicate] = {
         disjToList(toDnf(rule.condition)).flatMap(conj => applySubRule(conj ==> rule.result))
     }
 
-    private def applySubRule(rule: Rule): List[Predicate] = {
+    private def applySubRule(rule: Rule)(implicit predicateStorage: PredicateStorage): List[Predicate] = {
         val predicatesOfConj = conjToList(rule.condition)
         val substitutions = predicatesOfConj.tail.foldLeft{
             predicateStorage.getTrueStatements.flatMap(createSubstitution(predicatesOfConj.head, _))
@@ -35,7 +35,7 @@ class LogicalExpressions(predicateStorage: PredicateStorage = new PredicateStora
         }
     }
 
-    def eval(exp: Predicate): Option[Boolean] = {
+    def eval(exp: Predicate)(implicit predicateStorage: PredicateStorage): Option[Boolean] = {
         var hasNone = false
         disjToList(toDnf(exp)).foreach{conj=>
             evalConj(conj) match {
@@ -87,7 +87,7 @@ class LogicalExpressions(predicateStorage: PredicateStorage = new PredicateStora
         }
     }
 
-    private def evalConj(conj: Predicate): Option[Boolean] = {
+    private def evalConj(conj: Predicate)(implicit predicateStorage: PredicateStorage): Option[Boolean] = {
         var hasNone = false
         conjToList(conj).foreach{pr=>
             predicateStorage.getTrueOrFalse(pr) match {
