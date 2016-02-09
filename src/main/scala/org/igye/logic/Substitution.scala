@@ -1,6 +1,8 @@
 package org.igye.logic
 
 case class Substitution(from: Predicate, to: Predicate, map: Map[Predicate, Predicate], parent: Option[Substitution]) {
+    lazy val flattenMap: Map[Predicate, Predicate] = map ++ parent.map(_.flattenMap).getOrElse(Map())
+
     def contradicts(key: Predicate, value: Predicate): Boolean = {
         val res = get(key)
         !res.isEmpty && res.get != value
@@ -12,10 +14,6 @@ case class Substitution(from: Predicate, to: Predicate, map: Map[Predicate, Pred
         } else {
             parent.flatMap(_.get(key))
         }
-    }
-
-    def flattenMap: Map[Predicate, Predicate] = {
-        map ++ parent.map(_.flattenMap).getOrElse(Map())
     }
 
     override def toString: String = s"Sub(" +

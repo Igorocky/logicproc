@@ -3,8 +3,8 @@ package org.igye.logic
 import org.igye.logic.LogicOperators._
 import org.igye.logic.LogicalOperationsOnPredicate.predicateToLogicalOperationsOnPredicate
 
-class PredicateStorage {
-    private var knownTrueStatements = List[Predicate]()
+class PredicateStorage(private var knownTrueStatements: List[Predicate] = Nil) {
+    def this(predicates: Predicate*) = this(predicates.toList)
 
     def getTrueStatements = knownTrueStatements
 

@@ -17,7 +17,7 @@ class LogicalExpressionsTest {
     @Test
     def disjToList(): Unit = {
         val disj = A&B or B&C or C&D or D
-        val list = new LogicalExpressions(null).disjToList(disj)
+        val list = new LogicalExpressions().disjToList(disj)
         Assert.assertEquals(A&B, list(0))
         Assert.assertEquals(B&C, list(1))
         Assert.assertEquals(C&D, list(2))
@@ -27,7 +27,7 @@ class LogicalExpressionsTest {
     @Test
     def conjToList(): Unit = {
         val conj = A & B & C & D
-        val list = new LogicalExpressions(null).conjToList(conj)
+        val list = new LogicalExpressions().conjToList(conj)
         Assert.assertEquals(A, list(0))
         Assert.assertEquals(B, list(1))
         Assert.assertEquals(C, list(2))
@@ -85,7 +85,7 @@ class LogicalExpressionsTest {
 
     @Test
     def createSubstitutions1(): Unit = {
-        val sub1 = new LogicalExpressions(null).createSubstitution(
+        val sub1 = new LogicalExpressions().createSubstitution(
             (X is B) & (Y is D),
             (A is B) & (C is D)
         ).get
@@ -95,7 +95,7 @@ class LogicalExpressionsTest {
 
     @Test
     def createSubstitutions2(): Unit = {
-        val sub2 = new LogicalExpressions(null).createSubstitution(
+        val sub2 = new LogicalExpressions().createSubstitution(
             (X is B) & (X is D),
             (A is B) & (C is D)
         )
@@ -104,7 +104,7 @@ class LogicalExpressionsTest {
 
     @Test
     def createSubstitutions3(): Unit = {
-        val sub1 = new LogicalExpressions(null).createSubstitution(
+        val sub1 = new LogicalExpressions().createSubstitution(
             (X is B) & (Y is D),
             (A is B) & (Z is D)
         ).get
@@ -136,5 +136,21 @@ class LogicalExpressionsTest {
         )
         Assert.assertEquals(1, newPredicates.length)
         Assert.assertEquals(A is C, newPredicates(0))
+    }
+
+    @Test
+    def query1(): Unit = {
+        val qRes = new LogicalExpressions(
+            new PredicateStorage(
+                (A is E) & (A is D)
+                ,(C is E) & (C is D)
+                ,(C is E) & (B is D)
+            )
+        ).query(
+            (X is E) & (X is D)
+        )
+        Assert.assertEquals(2, qRes.length)
+        Assert.assertTrue(qRes.contains(Map(X -> A)))
+        Assert.assertTrue(qRes.contains(Map(X -> C)))
     }
 }

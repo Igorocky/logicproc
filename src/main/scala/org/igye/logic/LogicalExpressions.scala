@@ -3,7 +3,13 @@ package org.igye.logic
 import org.igye.logic.LogicOperators.{&, or, toDnf}
 import org.igye.logic.LogicalOperationsOnPredicate.predicateToLogicalOperationsOnPredicate
 
-class LogicalExpressions(predicateStorage: PredicateStorage) {
+class LogicalExpressions(predicateStorage: PredicateStorage = new PredicateStorage) {
+    def query(query: Predicate): List[Map[Predicate, Predicate]] = {
+        predicateStorage.getTrueStatements.flatMap(createSubstitution(query, _))
+            .map(_.flattenMap)
+            .filter(!_.values.exists(_.isInstanceOf[Placeholder]))
+    }
+
     def applyRule(rule: Rule): List[Predicate] = {
         disjToList(toDnf(rule.condition)).flatMap(conj => applySubRule(conj ==> rule.result))
     }
