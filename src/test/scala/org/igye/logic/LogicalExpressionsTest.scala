@@ -35,35 +35,52 @@ class LogicalExpressionsTest {
     }
 
     @Test
-    def eval(): Unit = {
-        var stor = new PredicateStorage
+    def eval1(): Unit = {
+        val stor = new PredicateStorage
         stor.saveTrue(A)
         stor.saveFalse(B)
-        var expr = new LogicalExpressions(stor)
+        val expr = new LogicalExpressions(stor)
         Assert.assertTrue(expr.eval(A or B).get)
         Assert.assertFalse(expr.eval(A & B).get)
         Assert.assertFalse(expr.eval(A & B & C).get)
         Assert.assertEquals(None, expr.eval(A & C))
+    }
 
-        stor = new PredicateStorage
+    @Test
+    def eval2(): Unit = {
+        val stor = new PredicateStorage
         stor.saveFalse(A)
         stor.saveTrue(B)
         stor.saveTrue(C)
-        expr = new LogicalExpressions(stor)
+        val expr = new LogicalExpressions(stor)
         Assert.assertFalse(expr.eval(!(A or B&C)).get)
+    }
 
-        stor = new PredicateStorage
+    @Test
+    def eval3(): Unit = {
+        val stor = new PredicateStorage
         stor.saveFalse(A)
         stor.saveFalse(B)
         stor.saveFalse(C)
-        expr = new LogicalExpressions(stor)
+        val expr = new LogicalExpressions(stor)
         Assert.assertTrue(expr.eval(!(A or B&C)).get)
+    }
 
-        stor = new PredicateStorage
+    @Test
+    def eval4(): Unit = {
+        val stor = new PredicateStorage
         stor.saveTrue(B)
         stor.saveFalse(C)
-        expr = new LogicalExpressions(stor)
+        val expr = new LogicalExpressions(stor)
         Assert.assertEquals(None, expr.eval(!(A or B&C)))
+    }
+
+    @Test
+    def eval5(): Unit = {
+        val stor = new PredicateStorage
+        stor.saveFalse(B)
+        val expr = new LogicalExpressions(stor)
+        Assert.assertFalse(expr.eval(A&B).get)
     }
 
     @Test

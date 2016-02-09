@@ -1,20 +1,21 @@
 package org.igye.logic
 
 import org.igye.logic.LogicOperators.{&, or, toDnf}
+import org.igye.logic.LogicalOperationsOnPredicate.predicateToLogicalOperationsOnPredicate
 
 class LogicalExpressions(predicateStorage: PredicateStorage) {
     def applyRule(rule: Rule): List[Predicate] = {
-        disjToList(toDnf(rule.condition)).flatMap(conj => applySubRule(Rule(conj, rule.result)))
+        disjToList(toDnf(rule.condition)).flatMap(conj => applySubRule(conj ==> rule.result))
     }
 
     private def applySubRule(rule: Rule): List[Predicate] = {
-        val subConjList = conjToList(rule.condition)
-        val substitutions = subConjList.tail.foldLeft{
-            predicateStorage.getTrueStatements.flatMap(createSubstitution(subConjList.head, _))
+        val predicatesOfConj = conjToList(rule.condition)
+        val substitutions = predicatesOfConj.tail.foldLeft{
+            predicateStorage.getTrueStatements.flatMap(createSubstitution(predicatesOfConj.head, _))
         }{
-            case (mappings, conj) =>
-                mappings.flatMap{sub=>
-                    predicateStorage.getTrueStatements.flatMap(createSubstitution(conj, _, Some(sub)))
+            case (substitutions, predicate) =>
+                substitutions.flatMap{sub=>
+                    predicateStorage.getTrueStatements.flatMap(createSubstitution(predicate, _, Some(sub)))
                 }
         }
         substitutions.map(applySubstitution(rule.result, _))
@@ -23,7 +24,7 @@ class LogicalExpressions(predicateStorage: PredicateStorage) {
     def applySubstitution(pr: Predicate, sub: Substitution): Predicate = {
         sub.get(pr).getOrElse{
             pr.copy(pr.orderedChildren.map{
-                case pr: Predicate => sub.get(pr).getOrElse(applySubstitution(pr, sub))
+                case pr: Predicate => applySubstitution(pr, sub)
             })
         }
     }
