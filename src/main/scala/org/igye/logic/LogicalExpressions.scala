@@ -4,16 +4,11 @@ import org.igye.logic.LogicOperators.{&, or, toDnf}
 import org.igye.logic.LogicalOperationsOnPredicate.predicateToLogicalOperationsOnPredicate
 
 object LogicalExpressions {
-    def query(query: Predicate)(implicit predicateStorage: PredicateStorage): List[Substitution] = {
-        predicateStorage.getTrueStatements.flatMap(createSubstitution(query, _))
-            .filter(!_.flattenMap.values.exists(_.isInstanceOf[Placeholder]))
-    }
-
     def applyRule(rule: Rule)(implicit predicateStorage: PredicateStorage): List[Predicate] = {
-        disjToList(toDnf(rule.condition)).flatMap(conj => applySubRule(conj ==> rule.result))
+        disjToList(toDnf(rule.condition)).flatMap(conj => applyRulePriv(conj ==> rule.result))
     }
 
-    private def applySubRule(rule: Rule)(implicit predicateStorage: PredicateStorage): List[Predicate] = {
+    private def applyRulePriv(rule: Rule)(implicit predicateStorage: PredicateStorage): List[Predicate] = {
         val predicatesOfConj = conjToList(rule.condition)
         val substitutions = predicatesOfConj.tail.foldLeft{
             predicateStorage.getTrueStatements.flatMap(createSubstitution(predicatesOfConj.head, _))
@@ -62,6 +57,12 @@ object LogicalExpressions {
             fromPr.orderedChildren.zip(toPr.orderedChildren).foldLeft(parent){
                 case (soFarRes, currPair) =>
                     currPair match {
+                        case (from: Placeholder, to: Placeholder) =>
+                            if (soFarRes.exists(_.contradicts(from, to))) {
+                                return None
+                            } else {
+                                Some(Substitution(from = from, to = to, map = Map(from -> to), parent = soFarRes))
+                            }
                         case (from: Placeholder, to: Predicate) =>
                             if (soFarRes.exists(_.contradicts(from, to))) {
                                 return None

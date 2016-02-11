@@ -16,6 +16,13 @@ case class Substitution(from: Predicate, to: Predicate, map: Map[Predicate, Pred
         }
     }
 
+    def reverse = Substitution(
+        from = to,
+        to = from,
+        map = flattenMap.toList.map{case (k,v) => (v,k)}.toMap,
+        None
+    )
+
     override def toString: String = s"Sub(" +
         s"from =   $from, " +
         s"to =     $to, " +

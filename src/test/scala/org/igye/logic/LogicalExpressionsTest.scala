@@ -10,6 +10,8 @@ class LogicalExpressionsTest {
     val D = StringPredicate("D")
     val E = StringPredicate("E")
 
+    val M = Placeholder("M")
+    val N = Placeholder("N")
     val X = Placeholder("X")
     val Y = Placeholder("Y")
     val Z = Placeholder("Z")
@@ -108,6 +110,16 @@ class LogicalExpressionsTest {
     }
 
     @Test
+    def createSubstitutions4(): Unit = {
+        val sub1 = LogicalExpressions.createSubstitution(
+            (M is N),
+            (X is Z)
+        ).get
+        Assert.assertEquals(X, sub1.get(M).get)
+        Assert.assertEquals(Z, sub1.get(N).get)
+    }
+
+    @Test
     def applyRule1(): Unit = {
         implicit val stor = new PredicateStorage
         stor.save(A is B)
@@ -131,20 +143,5 @@ class LogicalExpressionsTest {
         )
         Assert.assertEquals(1, newPredicates.length)
         Assert.assertEquals(A is C, newPredicates(0))
-    }
-
-    @Test
-    def query1(): Unit = {
-        implicit val stor = new PredicateStorage(
-            (A is E) & (A is D)
-            ,(C is E) & (C is D)
-            ,(C is E) & (B is D)
-        )
-        val qRes = LogicalExpressions.query(
-            (X is E) & (X is D)
-        ).map(_.flattenMap)
-        Assert.assertEquals(2, qRes.length)
-        Assert.assertTrue(qRes.contains(Map(X -> A)))
-        Assert.assertTrue(qRes.contains(Map(X -> C)))
     }
 }
