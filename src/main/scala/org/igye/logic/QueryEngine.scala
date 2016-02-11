@@ -3,16 +3,15 @@ package org.igye.logic
 import org.igye.logic.LogicalExpressions.{applySubstitution, createSubstitution}
 
 object QueryEngine {
-    def query(querySet: Set[Predicate], initialSubst: Option[Substitution] = None)
-             (implicit predicateStorage: PredicateStorage): List[Substitution] = {
+    def query(pr: Predicate)
+             (implicit predicateStorage: PredicateStorage, ruleStorage: RuleStorage): List[Substitution] = {
+        query(Set(pr))
+    }
 
-        val query2 = (if (initialSubst.isDefined) {
-            querySet.map(applySubstitution(_, initialSubst.get))
-        } else {
-            querySet
-        })
+    def query(querySet: Set[Predicate], collectedSubst: Option[Substitution] = None)
+             (implicit predicateStorage: PredicateStorage, ruleStorage: RuleStorage): List[Substitution] = {
 
-        val halfRes = querySingle(querySet.head, initialSubst)
+        val halfRes = querySingle(querySet.head, collectedSubst)
 
         if (querySet.size == 1) {
             halfRes
@@ -21,9 +20,15 @@ object QueryEngine {
         }
     }
 
-    def querySingle(queryPr: Predicate, initialSubst: Option[Substitution] = None)
-             (implicit predicateStorage: PredicateStorage): List[Substitution] = {
-        predicateStorage.getTrueStatements.flatMap(createSubstitution(queryPr, _, initialSubst))
+    def querySingle(queryPr: Predicate, collectedSubst: Option[Substitution])
+             (implicit predicateStorage: PredicateStorage, ruleStorage: RuleStorage): List[Substitution] = {
+        val resFromPredicateStorage = predicateStorage.getTrueStatements.flatMap(createSubstitution(queryPr, _, collectedSubst))
+        val queryPrWithSubs = if (collectedSubst.isDefined) applySubstitution(queryPr, collectedSubst.get) else queryPr
+        val resFromRuleStorage = createEquivalentQueries(queryPrWithSubs).flatMap(query(_, collectedSubst)).map(sub=>
+            Substitution(from = sub.from, to = sub.to, map = sub.flattenMap, parent = collectedSubst)
+        )
+
+        resFromPredicateStorage:::resFromRuleStorage
     }
 
     def createEquivalentQueries(queryPr: Predicate)(implicit ruleStorage: RuleStorage): List[Set[Predicate]] = {

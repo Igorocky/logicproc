@@ -23,12 +23,36 @@ class QueryEngineTest {
             ,(C is E) & (C is D)
             ,(C is E) & (B is D)
         )
+        implicit val rules = new RuleStorage()
         val qRes = QueryEngine.query(
-            Set((X is E) & (X is D))
+            (X is E) & (X is D)
         ).map(_.flattenMap)
         Assert.assertEquals(2, qRes.length)
         Assert.assertTrue(qRes.contains(Map(X -> A)))
         Assert.assertTrue(qRes.contains(Map(X -> C)))
+    }
+
+    @Test
+    def query2(): Unit = {
+        val Ira = StringPredicate("Ira")
+        val Igor = StringPredicate("Igor")
+        val Lena = StringPredicate("Lena")
+        val daughter = StringPredicate("daughter")
+        val son = StringPredicate("son")
+        val brother = StringPredicate("brother")
+        implicit val predicates = new PredicateStorage(
+            Ira is (daughter of Lena)
+            ,Igor is (son of Lena)
+        )
+        implicit val rules = new RuleStorage(
+            {(Y is (daughter of Z)) & (X is (son of Z))} ==> (X is (brother of Y))
+        )
+        val query = M is (brother of N)
+        val qRes = QueryEngine.query(
+            query
+        ).map(LogicalExpressions.applySubstitution(query, _))
+        Assert.assertEquals(1, qRes.length)
+        Assert.assertEquals(Igor is (brother of Ira), qRes(0))
     }
 
     @Test
