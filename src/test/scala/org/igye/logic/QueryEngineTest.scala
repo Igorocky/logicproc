@@ -1,5 +1,6 @@
 package org.igye.logic
 
+import org.igye.logic.LogicalExpressions.applySubstitution
 import org.igye.logic.LogicalOperationsOnPredicate.predicateToLogicalOperationsOnPredicate
 import org.junit.{Assert, Test}
 
@@ -45,12 +46,10 @@ class QueryEngineTest {
             ,Igor is (son of Lena)
         )
         implicit val rules = new RuleStorage(
-            {(Y is (daughter of Z)) & (X is (son of Z))} ==> (X is (brother of Y))
+            {(X is (son of Z)) & (Y is (daughter of Z))} ==> (X is (brother of Y))
         )
         val query = M is (brother of N)
-        val qRes = QueryEngine.query(
-            query
-        ).map(LogicalExpressions.applySubstitution(query, _))
+        val qRes = QueryEngine.query(query).map(applySubstitution(query, _))
         Assert.assertEquals(1, qRes.length)
         Assert.assertEquals(Igor is (brother of Ira), qRes(0))
     }
