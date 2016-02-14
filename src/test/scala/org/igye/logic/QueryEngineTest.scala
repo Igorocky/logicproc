@@ -85,15 +85,4 @@ class QueryEngineTest {
         Assert.assertEquals(1, qRes.length)
         Assert.assertEquals(Igor is (brother of Ira), qRes(0))
     }
-
-    @Test
-    def createEquivalentQueries(): Unit = {
-        implicit val rules = new RuleStorage(
-            ((A or B) & C) ==> (A & B)
-        )
-        val eqQueries = QueryEngine.createEquivalentQueries(M & N)
-        Assert.assertEquals(2, eqQueries.size)
-        Assert.assertTrue(eqQueries.contains(Set(M, C)))
-        Assert.assertTrue(eqQueries.contains(Set(N, C)))
-    }
 }
