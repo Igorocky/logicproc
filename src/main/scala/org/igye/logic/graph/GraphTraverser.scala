@@ -31,4 +31,6 @@ class GraphTraverser(initialNodes: List[Node], proc: NodeProcessor) {
             false
         }
     }
+
+    def getProcessedNodes = processedNodes
 }

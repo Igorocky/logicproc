@@ -6,40 +6,21 @@ import org.igye.logic.graph._
 class QueryEngine(queryPr: Predicate)(implicit predicateStorage: PredicateStorage, ruleStorage: RuleStorage) extends NodeProcessor {
     private var nodeCnt: Int = 0
 
+    val traverser = new GraphTraverser(List(RootNode(queryPr, nextNodeCnt())), this)
+
     private def nextNodeCnt() = {
         nodeCnt += 1
         nodeCnt
     }
 
-    def execute(): List[Substitution] = {
-        val traverser = new GraphTraverser(List(RootNode(queryPr, nextNodeCnt())), this)
-
+    def execute(): List[Result] = {
         while (traverser.step()){}
-        traverser.getResults().map(_.asInstanceOf[Result].subst)
+        traverser.getResults().map(_.asInstanceOf[Result])
     }
+
+    def getProcessedNodes = traverser.getProcessedNodes
 
     override def isResult(node: Node): Boolean = node.isInstanceOf[Result]
-
-    private def findParentNodeToContinueWorkWith(node: RuleNode, collectedSubsts: Substitution): (Node, Substitution) = node match {
-        case rt: RuleTail => findParentNodeToContinueWorkWith(rt.parent, collectedSubsts)
-        case rh: RuleHead =>
-            val newCollectedSubstitutions = rh.gate.replaceValues(collectedSubsts)
-            rh.parent match {
-                case rt: RuleTail =>
-                    if (rt.query.tail.nonEmpty) {
-                        (rt, newCollectedSubstitutions)
-                    } else {
-                        findParentNodeToContinueWorkWith(rt, newCollectedSubstitutions.concat(rt.collectedSubsts))
-                    }
-                case rh: RuleHead =>
-                    if (rh.rule.conjSet.tail.nonEmpty) {
-                        (rh, newCollectedSubstitutions)
-                    } else {
-                        findParentNodeToContinueWorkWith(rh, newCollectedSubstitutions)
-                    }
-                case rn: RootNode => (rn, newCollectedSubstitutions)
-            }
-    }
 
     override def process(node: Node): List[Node] = node match {
         case r: Result => Nil
@@ -70,6 +51,27 @@ class QueryEngine(queryPr: Predicate)(implicit predicateStorage: PredicateStorag
             }:::
             ruleStorage.getSubRules.flatMap{sr=>
                 createSubstitution(rt.query.head, sr.result).map(RuleHead(rt, sr, _, nextNodeCnt()))
+            }
+    }
+
+    private def findParentNodeToContinueWorkWith(node: RuleNode, collectedSubsts: Substitution): (Node, Substitution) = node match {
+        case rt: RuleTail => findParentNodeToContinueWorkWith(rt.parent, collectedSubsts)
+        case rh: RuleHead =>
+            val newCollectedSubstitutions = rh.gate.replaceValues(collectedSubsts)
+            rh.parent match {
+                case rt: RuleTail =>
+                    if (rt.query.tail.nonEmpty) {
+                        (rt, newCollectedSubstitutions)
+                    } else {
+                        findParentNodeToContinueWorkWith(rt, newCollectedSubstitutions.concat(rt.collectedSubsts))
+                    }
+                case rh: RuleHead =>
+                    if (rh.rule.conjSet.tail.nonEmpty) {
+                        (rh, newCollectedSubstitutions)
+                    } else {
+                        findParentNodeToContinueWorkWith(rh, newCollectedSubstitutions)
+                    }
+                case rn: RootNode => (rn, newCollectedSubstitutions)
             }
     }
 
