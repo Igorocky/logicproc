@@ -1,7 +1,7 @@
 package org.igye.logic.graph
 
 class GraphTraverser(initialNodes: List[Node], proc: NodeProcessor) {
-    private var nonProcessedNodes = initialNodes.sorted
+    private var nonProcessedNodes = initialNodes.sortWith(_ < _)
     private var processedNodes = List[Node]()
     private var results = List[Node]()
 
@@ -21,11 +21,11 @@ class GraphTraverser(initialNodes: List[Node], proc: NodeProcessor) {
             )
             newNodes.foreach{newNode=>
                 if (proc.isResult(newNode)) {
-                    results ::= curNode
+                    results ::= newNode
                 }
             }
             nonProcessedNodes :::= newNodes
-            nonProcessedNodes = nonProcessedNodes.sorted
+            nonProcessedNodes = nonProcessedNodes.sortWith(_ < _)
             true
         } else {
             false

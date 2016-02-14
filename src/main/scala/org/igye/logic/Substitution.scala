@@ -16,6 +16,14 @@ case class Substitution(from: Predicate, to: Predicate, map: Map[Predicate, Pred
         }
     }
 
+    def replaceValues(otherSubs: Substitution): Substitution = {
+        Substitution(from, to, flattenMap.toList.map{case (k,v) => (k, otherSubs.get(v).get)}.toMap, None)
+    }
+
+    def concat(otherSubs: Substitution): Substitution = {
+        Substitution(from, to, flattenMap, Some(otherSubs))
+    }
+
     def reverse = Substitution(
         from = to,
         to = from,

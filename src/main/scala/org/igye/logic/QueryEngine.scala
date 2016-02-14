@@ -22,7 +22,10 @@ object QueryEngine {
 
     def querySingle(queryPr: Predicate, collectedSubst: Option[Substitution])
              (implicit predicateStorage: PredicateStorage, ruleStorage: RuleStorage): List[Substitution] = {
-        val resFromPredicateStorage = predicateStorage.getTrueStatements.flatMap(createSubstitution(queryPr, _, collectedSubst))
+
+        val resFromPredicateStorage = predicateStorage.getTrueStatements
+            .flatMap(createSubstitution(queryPr, _, collectedSubst))
+
         val queryPrWithSubs = if (collectedSubst.isDefined) applySubstitution(queryPr, collectedSubst.get) else queryPr
         val resFromRuleStorage = createEquivalentQueries(queryPrWithSubs).flatMap(query(_)).map(sub=>
             Substitution(from = sub.from, to = sub.to, map = sub.flattenMap, parent = collectedSubst)
@@ -37,8 +40,7 @@ object QueryEngine {
             .filter(_._1.isDefined)
             .map{
                 case (substOpt, subRule) =>
-                    val reverseSubst = substOpt.get.reverse
-                    subRule.conjSet.map(applySubstitution(_, reverseSubst))
+                    subRule.conjSet.map(applySubstitution(_, substOpt.get.reverse))
             }
     }
 }
