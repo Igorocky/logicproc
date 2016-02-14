@@ -52,7 +52,7 @@ object LogicalExpressions {
             fromPr.orderedChildren.isEmpty && fromPr != toPr) {
             None
         } else if (fromPr == toPr) {
-            Some(Substitution(from = fromPr, to = toPr, map = Map(), parent))
+            Some(Substitution(map = Map(), parent))
         } else {
             fromPr.orderedChildren.zip(toPr.orderedChildren).foldLeft(parent){
                 case (soFarRes, currPair) =>
@@ -61,19 +61,19 @@ object LogicalExpressions {
                             if (soFarRes.exists(_.contradicts(from, to))) {
                                 return None
                             } else {
-                                Some(Substitution(from = from, to = to, map = Map(from -> to), parent = soFarRes))
+                                Some(Substitution(map = Map(from -> to), parent = soFarRes))
                             }
                         case (from: Placeholder, to: Predicate) =>
                             if (soFarRes.exists(_.contradicts(from, to))) {
                                 return None
                             } else {
-                                Some(Substitution(from = from, to = to, map = Map(from -> to), parent = soFarRes))
+                                Some(Substitution(map = Map(from -> to), parent = soFarRes))
                             }
                         case (from: Predicate, to: Placeholder) =>
                             if (soFarRes.exists(_.contradicts(from, to))) {
                                 return None
                             } else {
-                                Some(Substitution(from = from, to = to, map = Map(from -> to), parent = soFarRes))
+                                Some(Substitution(map = Map(from -> to), parent = soFarRes))
                             }
                         case (fromPr: Predicate, toPr: Predicate) =>
                             val childRes = createSubstitution(fromPr, toPr, soFarRes)
@@ -83,7 +83,7 @@ object LogicalExpressions {
                                 childRes
                             }
                     }
-            }.map(s => Substitution(from = fromPr, to = toPr, map = s.flattenMap, parent))
+            }
         }
     }
 

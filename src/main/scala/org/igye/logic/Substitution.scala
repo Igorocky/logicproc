@@ -1,6 +1,6 @@
 package org.igye.logic
 
-case class Substitution(from: Predicate, to: Predicate, map: Map[Predicate, Predicate], parent: Option[Substitution]) {
+case class Substitution(map: Map[Predicate, Predicate], parent: Option[Substitution]) {
     lazy val flattenMap: Map[Predicate, Predicate] = map ++ parent.map(_.flattenMap).getOrElse(Map())
 
     def contradicts(key: Predicate, value: Predicate): Boolean = {
@@ -17,23 +17,14 @@ case class Substitution(from: Predicate, to: Predicate, map: Map[Predicate, Pred
     }
 
     def replaceValues(otherSubs: Substitution): Substitution = {
-        Substitution(from, to, flattenMap.toList.map{case (k,v) => (k, otherSubs.get(v).get)}.toMap, None)
+        Substitution(flattenMap.toList.map{case (k,v) => (k, otherSubs.get(v).get)}.toMap, None)
     }
 
     def concat(otherSubs: Substitution): Substitution = {
-        Substitution(from, to, flattenMap, Some(otherSubs))
+        Substitution(flattenMap, Some(otherSubs))
     }
 
-    def reverse = Substitution(
-        from = to,
-        to = from,
-        map = flattenMap.toList.map{case (k,v) => (v,k)}.toMap,
-        None
-    )
-
     override def toString: String = s"Sub(" +
-        s"from =   $from, " +
-        s"to =     $to, " +
         s"map =    $map, " +
         s"parent = $parent)"
 }
