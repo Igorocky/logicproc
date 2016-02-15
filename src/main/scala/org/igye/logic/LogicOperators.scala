@@ -1,7 +1,7 @@
 package org.igye.logic
 
 import org.igye.logic.LogicalOperationsOnPredicate.predicateToLogicalOperationsOnPredicate
-import org.igye.logic.predicates.Is
+import org.igye.logic.predicates.is
 
 import scala.annotation.tailrec
 
@@ -18,7 +18,7 @@ object LogicOperators {
 
         private def toStr(a: Predicate): String = a match {
             case r: or => s"($r)"
-            case r: Is => s"($r)"
+            case r: is => s"($r)"
             case r => s"$r"
         }
         override def toString: String = s"${toStr(l)} & ${toStr(r)}"
