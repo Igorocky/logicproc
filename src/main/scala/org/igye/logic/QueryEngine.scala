@@ -2,6 +2,8 @@ package org.igye.logic
 
 import org.igye.logic.LogicalExpressions.{applySubstitution, createSubstitution}
 import org.igye.logic.graph._
+import org.igye.logic.graph.common.{GraphTraverser, Node, NodeProcessor}
+import org.igye.logic.graph.queryengine._
 
 class QueryEngine(queryPr: Predicate, predicateStorage: PredicateStorage, ruleStorage: RuleStorage) extends NodeProcessor {
     private var nodeCnt: Int = 0

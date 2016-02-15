@@ -1,7 +1,7 @@
 package org.igye.logic
 
 import org.igye.logic.LogicOperators.{&, or, !}
-import org.igye.logic.predicates.{belongsTo, of, is}
+import org.igye.logic.predicates._
 
 class LogicalOperationsOnPredicate(base: Predicate) {
     def &(a: Predicate): & = new &(base, a)
@@ -9,9 +9,11 @@ class LogicalOperationsOnPredicate(base: Predicate) {
     def unary_! : ! = new !(base)
 
     def -->(result: Predicate): Rule = Rule(base, result)
-    def is(a: Predicate): is = new is(base, a)
-    def of(a: Predicate): of = new of(base, a)
-    def belongsTo(a: Predicate): belongsTo = new belongsTo(base, a)
+    def is(a: Predicate): Is = Is(base, a)
+    def of(a: Predicate): Of = Of(base, a)
+    def belongsTo(a: Predicate): BelongsTo = BelongsTo(base, a)
+    def ==>(a: Predicate): Equivalent = Equivalent(base, a)
+    def <=>(a: Predicate): EquivalentBidirectional = EquivalentBidirectional(base, a)
 }
 
 

@@ -1,6 +1,8 @@
 package org.igye.logic
 
 import org.igye.logic.graph._
+import org.igye.logic.graph.common.Node
+import org.igye.logic.graph.queryengine.{RuleTail, Result, RootNode, RuleHead}
 
 object ResultUtils {
     def explain(res: Result, processedNodes: List[Node]): String = {

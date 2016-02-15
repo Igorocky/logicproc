@@ -2,7 +2,7 @@ package org.igye.logic
 
 import org.igye.logic.LogicalExpressions.findSubStructures
 import org.igye.logic.LogicalOperationsOnPredicate.predicateToLogicalOperationsOnPredicate
-import org.igye.logic.predicates.is
+import org.igye.logic.predicates.Is
 import org.junit.{Assert, Test}
 
 class LogicalExpressionsTest {
@@ -154,8 +154,8 @@ class LogicalExpressionsTest {
             X is Y
         ).map{case (p,s) => (p,s.flattenMap)} match {
             case List(
-                (is(A, B), map1)
-                ,(is(A, C), map2)
+                (Is(A, B), map1)
+                ,(Is(A, C), map2)
             ) =>
                 Assert.assertEquals(2, map1.size)
                 Assert.assertEquals(A, map1(X))
@@ -220,8 +220,8 @@ class LogicalExpressionsTest {
         ).map{case (p,s) => (p,s.flattenMap)} match {
             case List(
                 (WHERE_TO_SEARCH, map1)
-                ,(is(A, B), map2)
-                ,(is(A, C), map3)
+                ,(Is(A, B), map2)
+                ,(Is(A, C), map3)
             ) =>
                 Assert.assertEquals(2, map1.size)
                 Assert.assertEquals(A is B, map1(X))

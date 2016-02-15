@@ -1,4 +1,4 @@
-package org.igye.logic.graph
+package org.igye.logic.graph.common
 
 class GraphTraverser(initialNodes: List[Node], proc: NodeProcessor) {
     private var nonProcessedNodes = initialNodes.sortWith(_ < _)

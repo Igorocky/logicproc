@@ -2,7 +2,6 @@ package org.igye.logic
 
 import org.igye.logic.LogicalExpressions.applySubstitution
 import org.igye.logic.LogicalOperationsOnPredicate.predicateToLogicalOperationsOnPredicate
-import org.igye.logic.graph.Result
 import org.junit.{Assert, Test}
 
 class QueryEngineTest {

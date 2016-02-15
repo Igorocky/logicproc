@@ -1,4 +1,4 @@
-package org.igye.logic.graph
+package org.igye.logic.graph.common
 
 trait HasOrderNumber extends Ordered[HasOrderNumber] {
     val orderNumber: Int
