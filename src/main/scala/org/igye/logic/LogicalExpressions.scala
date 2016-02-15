@@ -45,6 +45,11 @@ object LogicalExpressions {
         }
     }
 
+    def findSubStructures(whereToSearch: Predicate, pattern: Predicate): List[(Predicate, Substitution)] = {
+        createSubstitution(pattern, whereToSearch).map(s => List((whereToSearch, s))).getOrElse(Nil):::
+            whereToSearch.orderedChildren.flatMap(findSubStructures(_, pattern))
+    }
+
     def createSubstitution(fromPr: Predicate, toPr: Predicate,
                            parent: Option[Substitution] = None): Option[Substitution] = {
         if (fromPr.orderedChildren.length != toPr.orderedChildren.length ||

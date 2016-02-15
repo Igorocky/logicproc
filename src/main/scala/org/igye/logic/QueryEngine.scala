@@ -3,7 +3,7 @@ package org.igye.logic
 import org.igye.logic.LogicalExpressions.{applySubstitution, createSubstitution}
 import org.igye.logic.graph._
 
-class QueryEngine(queryPr: Predicate)(implicit predicateStorage: PredicateStorage, ruleStorage: RuleStorage) extends NodeProcessor {
+class QueryEngine(queryPr: Predicate, predicateStorage: PredicateStorage, ruleStorage: RuleStorage) extends NodeProcessor {
     private var nodeCnt: Int = 0
 
     val traverser = new GraphTraverser(List(RootNode(queryPr, nextNodeCnt())), this)

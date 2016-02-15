@@ -1,6 +1,8 @@
 package org.igye.logic
 
+import org.igye.logic.LogicalExpressions.findSubStructures
 import org.igye.logic.LogicalOperationsOnPredicate.predicateToLogicalOperationsOnPredicate
+import org.igye.logic.predicates.is
 import org.junit.{Assert, Test}
 
 class LogicalExpressionsTest {
@@ -143,5 +145,94 @@ class LogicalExpressionsTest {
         )
         Assert.assertEquals(1, newPredicates.length)
         Assert.assertEquals(A is C, newPredicates(0))
+    }
+
+    @Test
+    def findSubStructuresTest1(): Unit = {
+        findSubStructures(
+            (A is B) belongsTo (A is C),
+            X is Y
+        ).map{case (p,s) => (p,s.flattenMap)} match {
+            case List(
+                (is(A, B), map1)
+                ,(is(A, C), map2)
+            ) =>
+                Assert.assertEquals(2, map1.size)
+                Assert.assertEquals(A, map1(X))
+                Assert.assertEquals(B, map1(Y))
+                Assert.assertEquals(2, map2.size)
+                Assert.assertEquals(A, map2(X))
+                Assert.assertEquals(C, map2(Y))
+        }
+    }
+
+    @Test
+    def findSubStructuresTest2(): Unit = {
+        val WHERE_TO_SEARCH = (A is B) belongsTo (A is C)
+        findSubStructures(
+            WHERE_TO_SEARCH,
+            (X is Y) belongsTo (X is Z)
+        ).map{case (p,s) => (p,s.flattenMap)} match {
+            case List(
+                (WHERE_TO_SEARCH, map)
+            ) =>
+                Assert.assertEquals(3, map.size)
+                Assert.assertEquals(A, map(X))
+                Assert.assertEquals(B, map(Y))
+                Assert.assertEquals(C, map(Z))
+        }
+    }
+
+    @Test
+    def findSubStructuresTest3(): Unit = {
+        val WHERE_TO_SEARCH = (A is B) belongsTo (A is C)
+        findSubStructures(
+            WHERE_TO_SEARCH,
+            (X is Y) belongsTo (M is Z)
+        ).map{case (p,s) => (p,s.flattenMap)} match {
+            case List(
+                (WHERE_TO_SEARCH, map)
+            ) =>
+                Assert.assertEquals(4, map.size)
+                Assert.assertEquals(A, map(X))
+                Assert.assertEquals(B, map(Y))
+                Assert.assertEquals(C, map(Z))
+                Assert.assertEquals(A, map(M))
+        }
+    }
+
+    @Test
+    def findSubStructuresTest4(): Unit = {
+        (findSubStructures(
+            (A is B) belongsTo (E is C),
+            (X is Y) belongsTo (X is Z)
+        ): @unchecked) match {
+            case Nil =>
+        }
+    }
+
+    @Test
+    def findSubStructuresTestRecursion(): Unit = {
+        val WHERE_TO_SEARCH = (A is B) is (A is C)
+        findSubStructures(
+            WHERE_TO_SEARCH,
+            (X is Y)
+        ).map{case (p,s) => (p,s.flattenMap)} match {
+            case List(
+                (WHERE_TO_SEARCH, map1)
+                ,(is(A, B), map2)
+                ,(is(A, C), map3)
+            ) =>
+                Assert.assertEquals(2, map1.size)
+                Assert.assertEquals(A is B, map1(X))
+                Assert.assertEquals(A is C, map1(Y))
+                Assert.assertEquals(2, map2.size)
+                Assert.assertEquals(A, map2(X))
+                Assert.assertEquals(B, map2(Y))
+                Assert.assertEquals(2, map3.size)
+                Assert.assertEquals(A, map3(X))
+                Assert.assertEquals(C, map3(Y))
+
+        }
     }
 }

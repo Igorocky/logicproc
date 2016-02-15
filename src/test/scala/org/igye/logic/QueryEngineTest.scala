@@ -26,7 +26,7 @@ class QueryEngineTest {
             ,(C is E) & (B is D)
         )
         implicit val rules = new RuleStorage()
-        val qRes = new QueryEngine((X is E) & (X is D)).execute().map(_.subst.flattenMap)
+        val qRes = new QueryEngine((X is E) & (X is D), stor, rules).execute().map(_.subst.flattenMap)
         Assert.assertEquals(2, qRes.length)
         Assert.assertTrue(qRes.contains(Map(X -> A)))
         Assert.assertTrue(qRes.contains(Map(X -> C)))
@@ -48,7 +48,7 @@ class QueryEngineTest {
             {(X is son of Z) & (Y is daughter of Z)} ==> (X is brother of Y)
         )
         val query = M is brother of N
-        val qRes = new QueryEngine(query).execute().map(res => applySubstitution(query, res.subst))
+        val qRes = new QueryEngine(query, predicates, rules).execute().map(res => applySubstitution(query, res.subst))
         Assert.assertEquals(1, qRes.length)
         Assert.assertEquals(Igor is brother of Ira, qRes(0))
     }
@@ -81,8 +81,33 @@ class QueryEngineTest {
             ,{(M is mother of C) & (C is female)} ==> (C is daughter of M)
         )
         val query = M is brother of N
-        val qRes = new QueryEngine(query).execute().map(res => applySubstitution(query, res.subst))
+        val qRes = new QueryEngine(query, predicates, rules).execute().map(res => applySubstitution(query, res.subst))
         Assert.assertEquals(1, qRes.length)
         Assert.assertEquals(Igor is brother of Ira, qRes(0))
     }
+
+//    @Test
+//    def query4(): Unit = {
+//        val _0 = StringPredicate("0")
+//        implicit val predicates = new PredicateStorage(
+//            Lena is mother of Ira
+//            ,Lena is mother of Igor
+//            ,Ira is female
+//            ,Igor is male
+//        )
+//
+//        val S = Placeholder("S")
+//        val D = Placeholder("D")
+//        val M = Placeholder("M")
+//        val C = Placeholder("C")
+//        implicit val rules = new RuleStorage(
+//            {(S is son of M) & (D is daughter of M)} ==> (S is brother of D)
+//            ,{(M is mother of C) & (C is male)} ==> (C is son of M)
+//            ,{(M is mother of C) & (C is female)} ==> (C is daughter of M)
+//        )
+//        val query = M is brother of N
+//        val qRes = new QueryEngine(query).execute().map(res => applySubstitution(query, res.subst))
+//        Assert.assertEquals(1, qRes.length)
+//        Assert.assertEquals(Igor is brother of Ira, qRes(0))
+//    }
 }
