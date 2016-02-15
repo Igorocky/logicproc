@@ -45,7 +45,7 @@ class QueryEngineTest {
             ,Igor is son of Lena
         )
         implicit val rules = new RuleStorage(
-            {(X is son of Z) & (Y is daughter of Z)} ==> (X is brother of Y)
+            {(X is son of Z) & (Y is daughter of Z)} --> (X is brother of Y)
         )
         val query = M is brother of N
         val qRes = new QueryEngine(query, predicates, rules).execute().map(res => applySubstitution(query, res.subst))
@@ -76,9 +76,9 @@ class QueryEngineTest {
         val M = Placeholder("M")
         val C = Placeholder("C")
         implicit val rules = new RuleStorage(
-            {(S is son of M) & (D is daughter of M)} ==> (S is brother of D)
-            ,{(M is mother of C) & (C is male)} ==> (C is son of M)
-            ,{(M is mother of C) & (C is female)} ==> (C is daughter of M)
+            {(S is son of M) & (D is daughter of M)} --> (S is brother of D)
+            ,{(M is mother of C) & (C is male)} --> (C is son of M)
+            ,{(M is mother of C) & (C is female)} --> (C is daughter of M)
         )
         val query = M is brother of N
         val qRes = new QueryEngine(query, predicates, rules).execute().map(res => applySubstitution(query, res.subst))

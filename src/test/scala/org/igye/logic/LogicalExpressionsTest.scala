@@ -128,7 +128,7 @@ class LogicalExpressionsTest {
         stor.save(A is C)
 
         val newPredicates = LogicalExpressions.applyRule(
-            ((X is B) & (X is C)) ==> (X is D)
+            ((X is B) & (X is C)) --> (X is D)
         )
         Assert.assertEquals(1, newPredicates.length)
         Assert.assertEquals(A is D, newPredicates(0))
@@ -141,7 +141,7 @@ class LogicalExpressionsTest {
         stor.save(B is C)
 
         val newPredicates = LogicalExpressions.applyRule(
-            ((X is Y) & (Y is Z)) ==> (X is Z)
+            ((X is Y) & (Y is Z)) --> (X is Z)
         )
         Assert.assertEquals(1, newPredicates.length)
         Assert.assertEquals(A is C, newPredicates(0))

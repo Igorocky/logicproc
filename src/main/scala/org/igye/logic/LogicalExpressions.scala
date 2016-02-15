@@ -5,7 +5,7 @@ import org.igye.logic.LogicalOperationsOnPredicate.predicateToLogicalOperationsO
 
 object LogicalExpressions {
     def applyRule(rule: Rule)(implicit predicateStorage: PredicateStorage): List[Predicate] = {
-        disjToList(toDnf(rule.condition)).flatMap(conj => applyRulePriv(conj ==> rule.result))
+        disjToList(toDnf(rule.condition)).flatMap(conj => applyRulePriv(conj --> rule.result))
     }
 
     private def applyRulePriv(rule: Rule)(implicit predicateStorage: PredicateStorage): List[Predicate] = {

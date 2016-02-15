@@ -8,7 +8,7 @@ class LogicalOperationsOnPredicate(base: Predicate) {
     def or(a: Predicate): or = new or(base, a)
     def unary_! : ! = new !(base)
 
-    def ==>(result: Predicate): Rule = Rule(base, result)
+    def -->(result: Predicate): Rule = Rule(base, result)
     def is(a: Predicate): is = new is(base, a)
     def of(a: Predicate): of = new of(base, a)
     def belongsTo(a: Predicate): belongsTo = new belongsTo(base, a)
