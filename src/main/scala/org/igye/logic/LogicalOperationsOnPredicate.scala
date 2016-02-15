@@ -9,11 +9,14 @@ class LogicalOperationsOnPredicate(base: Predicate) {
     def unary_! : ! = new !(base)
 
     def -->(result: Predicate): Rule = Rule(base, result)
+    def ==>(a: Predicate): eqTo = eqTo(base, a)
+    def <=>(a: Predicate): eqToBid = eqToBid(base, a)
+
     def is(a: Predicate): is = new is(base, a)
     def of(a: Predicate): of = new of(base, a)
     def belongsTo(a: Predicate): belongsTo = new belongsTo(base, a)
-    def ==>(a: Predicate): eqTo = eqTo(base, a)
-    def <=>(a: Predicate): eqToBid = eqToBid(base, a)
+
+    def add(a: Predicate): add = new add(base, a)
 }
 
 

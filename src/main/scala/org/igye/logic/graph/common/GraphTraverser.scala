@@ -3,7 +3,7 @@ package org.igye.logic.graph.common
 class GraphTraverser(initialNodes: List[Node], proc: NodeProcessor) {
     private var nonProcessedNodes = initialNodes.sortWith(_ < _)
     private var processedNodes = List[Node]()
-    private var results = List[Node]()
+    private var results = initialNodes.filter(proc.isResult(_))
 
     def getResults() = {
         val res = results
