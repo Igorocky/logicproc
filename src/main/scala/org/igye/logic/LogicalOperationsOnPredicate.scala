@@ -1,7 +1,8 @@
 package org.igye.logic
 
-import org.igye.logic.LogicOperators.{&, or, !}
-import org.igye.logic.predicates._
+import org.igye.logic.LogicOperators.{!, &, or}
+import org.igye.logic.predicates.common._
+import org.igye.logic.predicates.math.{add, mul}
 
 class LogicalOperationsOnPredicate(base: Predicate) {
     def &(a: Predicate): & = new &(base, a)
@@ -17,6 +18,7 @@ class LogicalOperationsOnPredicate(base: Predicate) {
     def belongsTo(a: Predicate): belongsTo = new belongsTo(base, a)
 
     def add(a: Predicate): add = new add(base, a)
+    def mul(a: Predicate): mul = new mul(base, a)
 }
 
 

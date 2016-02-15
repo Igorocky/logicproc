@@ -1,7 +1,7 @@
 package org.igye.logic
 
 import org.igye.logic.LogicalOperationsOnPredicate.predicateToLogicalOperationsOnPredicate
-import org.igye.logic.predicates.is
+import org.igye.logic.predicates.common.is
 
 import scala.annotation.tailrec
 

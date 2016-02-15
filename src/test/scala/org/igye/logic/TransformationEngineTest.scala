@@ -1,6 +1,7 @@
 package org.igye.logic
 
 import org.igye.logic.LogicalOperationsOnPredicate.predicateToLogicalOperationsOnPredicate
+import org.igye.logic.predicates.math.addInv
 import org.junit.Test
 
 class TransformationEngineTest {
@@ -12,6 +13,7 @@ class TransformationEngineTest {
 
         val x = Placeholder("x")
         val y = Placeholder("y")
+        val z = Placeholder("z")
 
         val statements = new PredicateStorage(
             _0 belongsTo R
@@ -19,8 +21,14 @@ class TransformationEngineTest {
         )
 
         val rules = new RuleStorage(
-            {x belongsTo R} --> {(x add _0) <=> x}
-            ,{x belongsTo R} --> {(x add _0) <=> (_0 add x)}
+            {(x belongsTo R) & (y belongsTo R)} --> {(x add y) belongsTo R}
+            ,{x belongsTo R} --> {addInv(x) belongsTo R}
+            ,{(x belongsTo R) & (y belongsTo R)} --> {(x mul y) belongsTo R}
+
+            ,/*1*/{x belongsTo R} --> {(x add _0) <=> x}
+            ,/*2*/{x belongsTo R} --> {(x add addInv(x)) ==> _0}
+            ,/*3*/{(x belongsTo R) & (y belongsTo R) & (z belongsTo R)} --> {(x add (y add z)) <=> ((x add y) add z)}
+            ,/*4*/{(x belongsTo R) & (y belongsTo R)} --> {(x add y) <=> (y add x)}
         )
 
         val eng = new TransformationEngine(a add _0, statements, rules)

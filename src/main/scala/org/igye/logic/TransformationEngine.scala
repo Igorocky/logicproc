@@ -3,7 +3,7 @@ package org.igye.logic
 import org.igye.logic.LogicalExpressions.{applySubstitution, findSubStructures}
 import org.igye.logic.graph.common.{GraphTraverser, Node, NodeProcessor}
 import org.igye.logic.graph.transfengine.{PossibleTransformation, TransfResult}
-import org.igye.logic.predicates.{eqToBid, eqTo}
+import org.igye.logic.predicates.common.{eqTo, eqToBid}
 
 class TransformationEngine(startPr: Predicate, predicateStorage: PredicateStorage, ruleStorage: RuleStorage) extends NodeProcessor {
     private var nodeCnt: Int = 0

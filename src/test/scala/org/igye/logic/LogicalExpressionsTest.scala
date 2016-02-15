@@ -2,7 +2,7 @@ package org.igye.logic
 
 import org.igye.logic.LogicalExpressions.findSubStructures
 import org.igye.logic.LogicalOperationsOnPredicate.predicateToLogicalOperationsOnPredicate
-import org.igye.logic.predicates.is
+import org.igye.logic.predicates.common.is
 import org.junit.{Assert, Test}
 
 class LogicalExpressionsTest {

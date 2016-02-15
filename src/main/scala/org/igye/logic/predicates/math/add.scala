@@ -1,4 +1,4 @@
-package org.igye.logic.predicates
+package org.igye.logic.predicates.math
 
 import org.igye.logic.Predicate
 
