@@ -52,43 +52,43 @@ object LogicalExpressions {
 
     def createSubstitution(fromPr: Predicate, toPr: Predicate,
                            parent: Option[Substitution] = None): Option[Substitution] = {
-        if (fromPr.orderedChildren.length != toPr.orderedChildren.length ||
-                fromPr.getClass != toPr.getClass ||
-            fromPr.orderedChildren.isEmpty && fromPr != toPr) {
-            None
-        } else if (fromPr == toPr) {
-            Some(Substitution(map = Map(), parent))
-        } else {
-            fromPr.orderedChildren.zip(toPr.orderedChildren).foldLeft(parent){
-                case (soFarRes, currPair) =>
-                    currPair match {
-                        case (from: Placeholder, to: Placeholder) =>
-                            if (soFarRes.exists(_.contradicts(from, to))) {
+        (fromPr, toPr) match {
+            case (from: Placeholder, to: Placeholder) =>
+                createSubstBetweenPlaceholderAndPredicate(from, to, parent)
+            case (from: Placeholder, to: Predicate) =>
+                createSubstBetweenPlaceholderAndPredicate(from, to, parent)
+            case (from: Predicate, to: Placeholder) =>
+                createSubstBetweenPlaceholderAndPredicate(from, to, parent)
+            case (fromPr: Predicate, toPr: Predicate) =>
+                if (fromPr.orderedChildren.length != toPr.orderedChildren.length ||
+                    fromPr.getClass != toPr.getClass ||
+                    fromPr.orderedChildren.isEmpty && fromPr != toPr) {
+                    None
+                } else if (fromPr == toPr) {
+                    Some(Substitution(map = Map(), parent))
+                } else {
+                    fromPr.orderedChildren.zip(toPr.orderedChildren).foldLeft(parent){
+                        case (soFarRes, (from, to)) =>
+                            val res = createSubstitution(from, to, soFarRes)
+                            if (res.isEmpty) {
                                 return None
                             } else {
-                                Some(Substitution(map = Map(from -> to), parent = soFarRes))
-                            }
-                        case (from: Placeholder, to: Predicate) =>
-                            if (soFarRes.exists(_.contradicts(from, to))) {
-                                return None
-                            } else {
-                                Some(Substitution(map = Map(from -> to), parent = soFarRes))
-                            }
-                        case (from: Predicate, to: Placeholder) =>
-                            if (soFarRes.exists(_.contradicts(from, to))) {
-                                return None
-                            } else {
-                                Some(Substitution(map = Map(from -> to), parent = soFarRes))
-                            }
-                        case (fromPr: Predicate, toPr: Predicate) =>
-                            val childRes = createSubstitution(fromPr, toPr, soFarRes)
-                            if (childRes.isEmpty) {
-                                return None
-                            } else {
-                                childRes
+                                res
                             }
                     }
-            }
+                }
+        }
+    }
+
+    private def createSubstBetweenPlaceholderAndPredicate(
+                                                             from: Predicate,
+                                                             to: Predicate,
+                                                             soFarRes: Option[Substitution]
+                                                         ): Option[Substitution] = {
+        if (soFarRes.exists(_.contradicts(from, to))) {
+            None
+        } else {
+            Some(Substitution(map = Map(from -> to), parent = soFarRes))
         }
     }
 

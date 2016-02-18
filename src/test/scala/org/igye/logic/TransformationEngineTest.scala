@@ -5,7 +5,7 @@ import org.igye.logic.predicates.math.addInv
 import org.junit.Test
 
 class TransformationEngineTest {
-    @Test
+//    @Test
     def next(): Unit = {
         val R = StringPredicate("R")
         val _0 = StringPredicate("0")

@@ -24,7 +24,8 @@ class TransformationEngine(startPr: Predicate, predicateStorage: PredicateStorag
 
     private def createPossibleTransformation(parentTransfRes: TransfResult,
                                              rule: SubRule, eqLeft: Predicate): List[PossibleTransformation] = {
-        findSubStructures(parentTransfRes.predicate, eqLeft).map {
+        log("createPossibleTransformation for " + parentTransfRes.predicate + " using " + rule + " and eqLeft " + eqLeft)
+        val res = findSubStructures(parentTransfRes.predicate, eqLeft).map {
             case (foundSubStructure, subs) =>
                 PossibleTransformation(
                     parent = parentTransfRes,
@@ -35,6 +36,8 @@ class TransformationEngine(startPr: Predicate, predicateStorage: PredicateStorag
                     orderNumber = nextNodeCnt()
                 )
         }
+        log("results in " + res)
+        res
     }
 
     private def applyEquivalentTransformation(pr: Predicate, condition: Set[Predicate], eqLeft: Predicate, eqRight: Predicate): List[Predicate] = {
@@ -80,8 +83,10 @@ class TransformationEngine(startPr: Predicate, predicateStorage: PredicateStorag
                     createPossibleTransformation(trRes, sr, result.right)
             }
         case posTr: PossibleTransformation =>
-            val condition = posTr.rule.conjSet
-            if (isSeqTrue(condition.map(applySubstitution(_, posTr.subs)))) {
+            val condition = posTr.rule.conjSet.map(applySubstitution(_, posTr.subs))
+            val isTrue = isSeqTrue(condition)
+            log(condition + " is " + isTrue)
+            if (isTrue) {
                 val eqRight = posTr.rule.result match {
                     case e: eqTo => e.right
                     case e: eqToBid => if (posTr.eqLeft == e.left) e.right else e.left
@@ -91,5 +96,10 @@ class TransformationEngine(startPr: Predicate, predicateStorage: PredicateStorag
             } else {
                 Nil
             }
+    }
+
+    private def log(msg: String): Unit = {
+//        println("-----------------------------------------")
+        println("log: " + msg)
     }
 }

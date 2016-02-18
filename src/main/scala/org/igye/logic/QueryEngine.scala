@@ -28,18 +28,23 @@ class QueryEngine(queryPr: Predicate, predicateStorage: PredicateStorage, ruleSt
         case rn: RootNode =>
             predicateStorage.getTrueStatements.flatMap(createSubstitution(rn.query, _)).map(Result(rn, _, nextNodeCnt())):::
             ruleStorage.getSubRules.flatMap{sr=>
-                createSubstitution(rn.query, sr.result).map(RuleHead(rn, sr, _, nextNodeCnt()))
+                createSubstitution(rn.query, sr.result).map{subs=>
+                    RuleHead(rn, invertAndRemovePlaceholders(subs), sr, subs, nextNodeCnt())
+                }
             }
         case rh: RuleHead =>
             predicateStorage.getTrueStatements.flatMap(createSubstitution(rh.query.head, _)).map{sbt=>
                 if (rh.query.tail.isEmpty) {
                     createNodeFromTerminalRuleNode(rh, sbt)
                 } else {
-                    RuleTail(rh, sbt, rh.query.tail.map(applySubstitution(_, sbt)), nextNodeCnt())
+                    val newCollectedSubst = sbt.concat(rh.collectedSubsts)
+                    RuleTail(rh, newCollectedSubst, rh.query.tail.map(applySubstitution(_, newCollectedSubst)), nextNodeCnt())
                 }
             }:::
             ruleStorage.getSubRules.flatMap{sr=>
-                createSubstitution(rh.query.head, sr.result).map(RuleHead(rh, sr, _, nextNodeCnt()))
+                createSubstitution(rh.query.head, sr.result).map{subs=>
+                    RuleHead(rh, invertAndRemovePlaceholders(subs), sr, subs, nextNodeCnt())
+                }
             }
         case rt: RuleTail =>
             predicateStorage.getTrueStatements.flatMap(createSubstitution(rt.query.head, _)).map{sbt=>
@@ -51,8 +56,20 @@ class QueryEngine(queryPr: Predicate, predicateStorage: PredicateStorage, ruleSt
                 }
             }:::
             ruleStorage.getSubRules.flatMap{sr=>
-                createSubstitution(rt.query.head, sr.result).map(RuleHead(rt, sr, _, nextNodeCnt()))
+                createSubstitution(rt.query.head, sr.result).map{subs=>
+                    RuleHead(rt, invertAndRemovePlaceholders(subs), sr, subs, nextNodeCnt())
+                }
             }
+    }
+
+    private def invertAndRemovePlaceholders(subs: Substitution) = {
+        Substitution(
+            subs.flattenMap.map{case (k,v) => (v,k)}.filter{
+                case (k,v: Placeholder) => false
+                case _ => true
+            },
+            None
+        )
     }
 
     private def findParentNodeToContinueWorkWith(node: RuleNode, collectedSubsts: Substitution): (Node, Substitution) = node match {
