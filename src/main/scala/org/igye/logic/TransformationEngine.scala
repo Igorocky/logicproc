@@ -40,17 +40,6 @@ class TransformationEngine(startPr: Predicate, predicateStorage: PredicateStorag
         res
     }
 
-    private def applyEquivalentTransformation(pr: Predicate, condition: Set[Predicate], eqLeft: Predicate, eqRight: Predicate): List[Predicate] = {
-        findSubStructures(pr, eqLeft).flatMap {
-            case (foundSubStructure, subs) =>
-                if (isSeqTrue(condition.map(applySubstitution(_, subs)))) {
-                    Some(replace(pr, foundSubStructure, applySubstitution(eqRight, subs)))
-                } else {
-                    None
-                }
-        }
-    }
-
     private def replace(where: Predicate, what: Predicate, withWhat: Predicate): Predicate = {
         if (where eq what) {
             withWhat
@@ -59,12 +48,18 @@ class TransformationEngine(startPr: Predicate, predicateStorage: PredicateStorag
         }
     }
 
-    private def isSeqTrue(set: Set[Predicate]): Boolean = {
-        set.forall(isTrue(_))
+    private def isSeqTrue(set: Set[Predicate], subs: Option[Substitution] = None): List[Substitution] = {
+        val newPr = if (subs.isDefined) applySubstitution(set.head, subs.get) else set.head
+        val newSubs = isTrue(newPr).map(s => if (subs.isDefined) s.concat(subs.get) else s)
+        if (set.tail.isEmpty) {
+            newSubs
+        } else {
+            newSubs.flatMap(s => isSeqTrue(set.tail, Some(s)))
+        }
     }
 
-    private def isTrue(pr: Predicate): Boolean = {
-        new QueryEngine(pr, predicateStorage, ruleStorage).execute().nonEmpty
+    private def isTrue(pr: Predicate): List[Substitution] = {
+        new QueryEngine(pr, predicateStorage, ruleStorage).execute().map(_.subst)
     }
 
     override def isResult(node: Node): Boolean = node.isInstanceOf[TransfResult]
@@ -86,17 +81,14 @@ class TransformationEngine(startPr: Predicate, predicateStorage: PredicateStorag
             val condition = posTr.rule.conjSet.map(applySubstitution(_, posTr.subs))
             log("querying for " + condition)
             val isTrue = isSeqTrue(condition)
-            log(condition + " is " + isTrue)
-            if (isTrue) {
-                val eqRight = posTr.rule.result match {
-                    case e: eqTo => e.right
-                    case e: eqToBid => if (posTr.eqLeft == e.left) e.right else e.left
-                }
-                List(replace(posTr.parent.predicate, posTr.part, applySubstitution(eqRight, posTr.subs)))
-                    .map(TransfResult(posTr, _, nextNodeCnt()))
-            } else {
-                Nil
+            log(condition + " isTrue = " + isTrue)
+            val eqRight = posTr.rule.result match {
+                case e: eqTo => e.right
+                case e: eqToBid => if (posTr.eqLeft == e.left) e.right else e.left
             }
+            isTrue.map(s=>
+                replace(posTr.parent.predicate, posTr.part, applySubstitution(eqRight, posTr.subs.concat(s)))
+            ).map(TransfResult(posTr, _, nextNodeCnt()))
     }
 
     private def log(msg: String): Unit = {

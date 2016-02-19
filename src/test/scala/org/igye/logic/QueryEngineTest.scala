@@ -47,7 +47,8 @@ class QueryEngineTest {
             {(X is son of Z) & (Y is daughter of Z)} --> (X is brother of Y)
         )
         val query = M is brother of N
-        val qRes = new QueryEngine(query, predicates, rules).execute().map(res => applySubstitution(query, res.subst))
+        val qe = new QueryEngine(query, predicates, rules)
+        val qRes = qe.execute().map(res => applySubstitution(query, res.subst))
         Assert.assertEquals(1, qRes.length)
         Assert.assertEquals(Igor is brother of Ira, qRes(0))
     }

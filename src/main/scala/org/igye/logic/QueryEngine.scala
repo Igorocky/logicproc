@@ -28,7 +28,7 @@ class QueryEngine(queryPr: Predicate, predicateStorage: PredicateStorage, ruleSt
         case rn: RootNode =>
             predicateStorage.getTrueStatements.flatMap(createSubstitution(rn.query, _)).map(Result(rn, _, nextNodeCnt())):::
             ruleStorage.getSubRules.flatMap{sr=>
-                createSubstitution(rn.query, sr.result).map{subs=>
+                createSubstitution(rn.query, sr.result).filter(gateFilter).map{subs=>
                     RuleHead(rn, invertAndRemovePlaceholders(subs), sr, createGate(subs), nextNodeCnt())
                 }
             }
@@ -42,7 +42,7 @@ class QueryEngine(queryPr: Predicate, predicateStorage: PredicateStorage, ruleSt
                 }
             }:::
             ruleStorage.getSubRules.flatMap{sr=>
-                createSubstitution(rh.query.head, sr.result).map{subs=>
+                createSubstitution(rh.query.head, sr.result).filter(gateFilter).map{subs=>
                     RuleHead(rh, invertAndRemovePlaceholders(subs), sr, createGate(subs), nextNodeCnt())
                 }
             }
@@ -56,10 +56,15 @@ class QueryEngine(queryPr: Predicate, predicateStorage: PredicateStorage, ruleSt
                 }
             }:::
             ruleStorage.getSubRules.flatMap{sr=>
-                createSubstitution(rt.query.head, sr.result).map{subs=>
+                createSubstitution(rt.query.head, sr.result).filter(gateFilter).map{subs=>
                     RuleHead(rt, invertAndRemovePlaceholders(subs), sr, createGate(subs), nextNodeCnt())
                 }
             }
+    }
+
+    private def gateFilter(subs: Substitution): Boolean = {
+        subs.flattenMap.isEmpty ||
+            subs.flattenMap.forall{case (k,v) => v.isInstanceOf[StringPredicate] || v.isInstanceOf[Placeholder]}
     }
 
     private def invertAndRemovePlaceholders(subs: Substitution) = {
