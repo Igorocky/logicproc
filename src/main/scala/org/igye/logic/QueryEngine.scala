@@ -29,7 +29,7 @@ class QueryEngine(queryPr: Predicate, predicateStorage: PredicateStorage, ruleSt
             predicateStorage.getTrueStatements.flatMap(createSubstitution(rn.query, _)).map(Result(rn, _, nextNodeCnt())):::
             ruleStorage.getSubRules.flatMap{sr=>
                 createSubstitution(rn.query, sr.result).map{subs=>
-                    RuleHead(rn, invertAndRemovePlaceholders(subs), sr, subs, nextNodeCnt())
+                    RuleHead(rn, invertAndRemovePlaceholders(subs), sr, createGate(subs), nextNodeCnt())
                 }
             }
         case rh: RuleHead =>
@@ -43,7 +43,7 @@ class QueryEngine(queryPr: Predicate, predicateStorage: PredicateStorage, ruleSt
             }:::
             ruleStorage.getSubRules.flatMap{sr=>
                 createSubstitution(rh.query.head, sr.result).map{subs=>
-                    RuleHead(rh, invertAndRemovePlaceholders(subs), sr, subs, nextNodeCnt())
+                    RuleHead(rh, invertAndRemovePlaceholders(subs), sr, createGate(subs), nextNodeCnt())
                 }
             }
         case rt: RuleTail =>
@@ -57,7 +57,7 @@ class QueryEngine(queryPr: Predicate, predicateStorage: PredicateStorage, ruleSt
             }:::
             ruleStorage.getSubRules.flatMap{sr=>
                 createSubstitution(rt.query.head, sr.result).map{subs=>
-                    RuleHead(rt, invertAndRemovePlaceholders(subs), sr, subs, nextNodeCnt())
+                    RuleHead(rt, invertAndRemovePlaceholders(subs), sr, createGate(subs), nextNodeCnt())
                 }
             }
     }
@@ -67,6 +67,15 @@ class QueryEngine(queryPr: Predicate, predicateStorage: PredicateStorage, ruleSt
             subs.flattenMap.map{case (k,v) => (v,k)}.filter{
                 case (k,v: Placeholder) => false
                 case _ => true
+            },
+            None
+        )
+    }
+
+    private def createGate(subs: Substitution) = {
+        Substitution(
+            subs.flattenMap.filter{
+                case (k,v) => k.isInstanceOf[Placeholder]
             },
             None
         )
@@ -94,6 +103,8 @@ class QueryEngine(queryPr: Predicate, predicateStorage: PredicateStorage, ruleSt
     }
 
     private def createNodeFromTerminalRuleNode(terminalRuleNode: RuleNode, overallSubst: Substitution): Node with Product with Serializable = {
+//        println("----------------------------------------------------------------------")
+//        println(ResultUtils.explain(getProcessedNodes, List(terminalRuleNode)))
         findParentNodeToContinueWorkWith(terminalRuleNode, overallSubst) match {
             case (rn: RootNode, s: Substitution) => Result(terminalRuleNode, s, nextNodeCnt())
             case (rh: RuleHead, s: Substitution) =>

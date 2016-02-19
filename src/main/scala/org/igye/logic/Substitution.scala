@@ -17,7 +17,11 @@ case class Substitution(map: Map[Predicate, Predicate], parent: Option[Substitut
     }
 
     def replaceValues(otherSubs: Substitution): Substitution = {
-        Substitution(flattenMap.map{case (k,v) => (k, otherSubs.get(v).get)}, None)
+        Substitution(flattenMap.map{
+            case (k,v) =>
+//                println((k,v))
+                (k, otherSubs.get(v).get)
+        }, None)
     }
 
     def concat(otherSubs: Substitution): Substitution = {

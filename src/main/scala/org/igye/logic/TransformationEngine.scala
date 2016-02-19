@@ -84,6 +84,7 @@ class TransformationEngine(startPr: Predicate, predicateStorage: PredicateStorag
             }
         case posTr: PossibleTransformation =>
             val condition = posTr.rule.conjSet.map(applySubstitution(_, posTr.subs))
+            log("querying for " + condition)
             val isTrue = isSeqTrue(condition)
             log(condition + " is " + isTrue)
             if (isTrue) {

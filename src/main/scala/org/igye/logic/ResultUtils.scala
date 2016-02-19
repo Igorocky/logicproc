@@ -23,22 +23,22 @@ object ResultUtils {
     }
 
     private def printChildNodes(node: Node, level: Int, allNodes: List[Node], nodesToMark: List[Node]): String = {
-        getAllChildren(node, allNodes).map{c=>
+        getAllChildren(node, allNodes).sortWith(_ < _).map{c=>
             "  "*level + printNode(c, nodesToMark) + "\n" + printChildNodes(c, level + 1, allNodes, nodesToMark)
         }.mkString("")
     }
 
     private def printNode(node: Node, nodesToMark: List[Node]): String = {
-        (if (nodesToMark.exists(_ eq node)) {
+        val mark = if (nodesToMark.exists(_ eq node)) {
             "*" + nodesToMark.indexWhere(_ eq node) + "*"
         } else {
             ""
-        }) +
-            (node match {
-                case rn: RootNode => s"Root: ${rn.query}"
-                case rh: RuleHead => s"RH: q: ${rh.query}, r: ${rh.rule}, a: ${rh.collectedSubsts.flattenMap}, g: ${rh.gate.flattenMap}"
-                case rt: RuleTail => s"RT: q: ${rt.query}, a: ${rt.collectedSubsts.flattenMap}"
-                case r: Result => s"Result: ${r.subst.flattenMap}"
-            })
+        }
+        node match {
+            case rn: RootNode => s"[${rn.orderNumber}]${mark}Root: ${rn.query}"
+            case rh: RuleHead => s"[${rh.orderNumber}]${mark}RH: q: ${rh.query}, r: ${rh.rule}, a: ${rh.collectedSubsts.flattenMap}, g: ${rh.gate.flattenMap}"
+            case rt: RuleTail => s"[${rt.orderNumber}]${mark}RT: q: ${rt.query}, a: ${rt.collectedSubsts.flattenMap}"
+            case r: Result => s"[${r.orderNumber}]${mark}Result: ${r.subst.flattenMap}"
+        }
     }
 }
