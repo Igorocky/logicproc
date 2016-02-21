@@ -1,5 +1,6 @@
 package org.igye.logic
 
+import jdk.nashorn.internal.ir.annotations.Ignore
 import org.igye.logic.LogicalOperationsOnPredicate.predicateToLogicalOperationsOnPredicate
 import org.igye.logic.graph.transfengine.TransfResult
 import org.igye.logic.predicates.PredicateUtils
@@ -7,9 +8,11 @@ import org.igye.logic.predicates.math.{addInv, mulInv}
 import org.junit.{Assert, Test}
 
 class TransformationEngineTest {
+  @Ignore
   @Test
   def next(): Unit = {
     val R = StringPredicate("R")
+    val Rsub0 = StringPredicate("Rsub0")
     val _0 = StringPredicate("0")
     val _1 = StringPredicate("1")
     val a = StringPredicate("a")
@@ -20,7 +23,7 @@ class TransformationEngineTest {
 
     val statements = new PredicateStorage(
       _0 belongsTo R
-      , _1 belongsTo R
+      , _1 belongsTo Rsub0
       , a belongsTo R
     )
 
@@ -29,6 +32,7 @@ class TransformationEngineTest {
       , {x belongsTo R} --> {addInv(x) belongsTo R}
       , {(x belongsTo R) & (y belongsTo R)} --> {(x mul y) belongsTo R}
       , {x belongsTo R} --> {mulInv(x) belongsTo R}
+      , {x belongsTo Rsub0} --> {x belongsTo R}
 
       , /*1*/ {x belongsTo R} --> {(x add _0) <=> x}
       , /*2*/ {x belongsTo R} --> {(x add addInv(x)) <=> _0}
@@ -36,7 +40,7 @@ class TransformationEngineTest {
       , /*4*/ {(x belongsTo R) & (y belongsTo R)} --> {(x add y) <=> (y add x)}
 
       , /*1*/ {x belongsTo R} --> {(x mul _1) <=> x}
-      , /*2*/ {x belongsTo R} --> {(x mul mulInv(x)) <=> _1}
+      , /*2*/ {x belongsTo Rsub0} --> {(x mul mulInv(x)) <=> _1}
       , /*3*/ {(x belongsTo R) & (y belongsTo R) & (z belongsTo R)} --> {(x mul (y mul z)) <=> ((x mul y) mul z)}
       , /*4*/ {(x belongsTo R) & (y belongsTo R)} --> {(x mul y) <=> (y mul x)}
 
