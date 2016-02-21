@@ -60,7 +60,7 @@ class TransformationEngineTest {
       Assert.assertFalse(res.get.contains(_0))
       res.foreach(_.foreach{pr =>
         cnt += 1
-        println(s"res[$cnt]>>> " + pr)
+        println(s"res[$cnt]>>> " + pr + s" by ${eng.getRule(pr)}")
       })
       res = eng.next2()
     }

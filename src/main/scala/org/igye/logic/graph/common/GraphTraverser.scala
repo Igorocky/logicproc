@@ -37,6 +37,7 @@ class GraphTraverser(initialStates: Set[Any], proc: NodeProcessor) {
     }
 
     def getProcessedNodes: List[Node] = processedNodes
+    def getNonProcessedNodes: List[Node] = nonProcessedNodes
 
     def getParent(state: Any): Option[Any] = {
         processedNodes.find(_.value == state).map(_.parent.value)

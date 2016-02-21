@@ -108,4 +108,9 @@ class TransformationEngine(startPr: Predicate,
         }._1
 
     override def isAllowed(state: Any): Boolean = !restrictions.exists(_(state))
+
+  def getRule(pr: Predicate): SubRule = (traverser.getProcessedNodes:::traverser.getNonProcessedNodes).find{
+    case Node(Node(_, pt: PossibleTransformation), tr: TransfResult) if tr.predicate == pr => true
+    case _ => false
+  }.map{case Node(Node(_, pt: PossibleTransformation), tr: TransfResult) => pt.rule}.getOrElse(null)
 }
