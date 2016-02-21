@@ -5,16 +5,10 @@ import org.igye.logic.graph.common.{GraphTraverser, Node, NodeProcessor}
 import org.igye.logic.graph.transfengine.{PossibleTransformation, TransfResult}
 import org.igye.logic.predicates.common.{eqTo, eqToBid}
 
-class TransformationEngine(startPr: Predicate, predicateStorage: PredicateStorage, ruleStorage: RuleStorage) /*extends NodeProcessor*/ {
-    /*private var nodeCnt: Int = 0
-    private val traverser = new GraphTraverser(List(TransfResult(null, startPr, nextNodeCnt())), this)
+class TransformationEngine(startPr: Predicate, predicateStorage: PredicateStorage, ruleStorage: RuleStorage) extends NodeProcessor {
+    private val traverser = new GraphTraverser(Set(TransfResult(startPr)), this)
 
-    private def nextNodeCnt() = {
-        nodeCnt += 1
-        nodeCnt
-    }
-
-    def next2(): Option[List[Predicate]] = {
+    def next2(): Option[Set[Predicate]] = {
         if (traverser.step()) {
             Some(traverser.getResults().map(_.asInstanceOf[TransfResult].predicate))
         } else {
@@ -28,12 +22,10 @@ class TransformationEngine(startPr: Predicate, predicateStorage: PredicateStorag
         val res = findSubStructures(parentTransfRes.predicate, eqLeft).map {
             case (foundSubStructure, subs) =>
                 PossibleTransformation(
-                    parent = parentTransfRes,
                     part = foundSubStructure,
                     rule = rule,
                     eqLeft = eqLeft,
-                    subs = subs,
-                    orderNumber = nextNodeCnt()
+                    subs = subs
                 )
         }
         log("results in " + res)
@@ -48,7 +40,7 @@ class TransformationEngine(startPr: Predicate, predicateStorage: PredicateStorag
         }
     }
 
-    private def isSeqTrue(set: Set[Predicate], subs: Option[Substitution] = None): List[Substitution] = {
+    private def isSeqTrue(set: Set[Predicate], subs: Option[Substitution] = None): Set[Substitution] = {
         val newPr = if (subs.isDefined) applySubstitution(set.head, subs.get) else set.head
         val newSubs = isTrue(newPr).map(s => if (subs.isDefined) s.concat(subs.get) else s)
         if (set.tail.isEmpty) {
@@ -58,13 +50,13 @@ class TransformationEngine(startPr: Predicate, predicateStorage: PredicateStorag
         }
     }
 
-    private def isTrue(pr: Predicate): List[Substitution] = {
+    private def isTrue(pr: Predicate): Set[Substitution] = {
         new QueryEngine(pr, predicateStorage, ruleStorage).execute().map(_.subst)
     }
 
-    override def isResult(node: Node): Boolean = node.isInstanceOf[TransfResult]
+    override def isResult(state: Any): Boolean = state.isInstanceOf[TransfResult]
 
-    override def process(node: Node): List[Node] = node match {
+    override def process(state: Any): Set[Any] = state match {
         case trRes: TransfResult =>
             ruleStorage.getSubRules.filter{
                 case SubRule(_, r: eqTo, _) => true
@@ -76,7 +68,7 @@ class TransformationEngine(startPr: Predicate, predicateStorage: PredicateStorag
                 case sr @ SubRule(condition, result: eqToBid, _) =>
                     createPossibleTransformation(trRes, sr, result.left):::
                     createPossibleTransformation(trRes, sr, result.right)
-            }
+            }.toSet
         case posTr: PossibleTransformation =>
             val condition = posTr.rule.conjSet.map(applySubstitution(_, posTr.subs))
             log("querying for " + condition)
@@ -87,12 +79,16 @@ class TransformationEngine(startPr: Predicate, predicateStorage: PredicateStorag
                 case e: eqToBid => if (posTr.eqLeft == e.left) e.right else e.left
             }
             isTrue.map(s=>
-                replace(posTr.parent.predicate, posTr.part, applySubstitution(eqRight, posTr.subs.concat(s)))
-            ).map(TransfResult(posTr, _, nextNodeCnt()))
+                replace(parentOf(posTr).predicate, posTr.part, applySubstitution(eqRight, posTr.subs.concat(s)))
+            ).map(TransfResult(_))
     }
+
+    private def parentOf(posTr: PossibleTransformation) = traverser.getParent(posTr).get.asInstanceOf[TransfResult]
 
     private def log(msg: String): Unit = {
 //        println("-----------------------------------------")
         println("log: " + msg)
-    }*/
+    }
+
+    override def getNextState(unprocessedStates: List[Any]): Any = unprocessedStates.last
 }

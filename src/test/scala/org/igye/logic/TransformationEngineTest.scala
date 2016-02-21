@@ -33,10 +33,10 @@ class TransformationEngineTest {
 
         val eng = new TransformationEngine(a add _0, statements, rules)
 
-//        var res: Option[List[Predicate]] = eng.next2()
-//        while (res.isDefined) {
-//            res.foreach(_.foreach(pr => println("res>>> " + pr)))
-//            res = eng.next2()
-//        }
+        var res: Option[Set[Predicate]] = eng.next2()
+        while (res.isDefined) {
+            res.foreach(_.foreach(pr => println("res>>> " + pr)))
+            res = eng.next2()
+        }
     }
 }
