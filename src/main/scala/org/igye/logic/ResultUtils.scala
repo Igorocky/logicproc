@@ -4,7 +4,7 @@ import org.igye.logic.graph.common.Node
 import org.igye.logic.graph.queryengine.{Result, RootNode, RuleHead, RuleTail}
 
 object ResultUtils {
-    def explain(processedNodes: List[Node], nodesToMark: List[Node] = Nil): String = {
+    /*def explain(processedNodes: List[Node], nodesToMark: List[Node] = Nil): String = {
         val root = getPathToRoot(processedNodes.head).last
         printNode(root, nodesToMark) + "\n" + printChildNodes(root, 1, processedNodes, nodesToMark)
     }
@@ -40,5 +40,5 @@ object ResultUtils {
             case rt: RuleTail => s"[${rt.orderNumber}]${mark}RT: q: ${rt.query}, a: ${rt.collectedSubsts.flattenMap}"
             case r: Result => s"[${r.orderNumber}]${mark}Result: ${r.subst.flattenMap}"
         }
-    }
+    }*/
 }

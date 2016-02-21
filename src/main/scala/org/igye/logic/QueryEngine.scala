@@ -5,61 +5,54 @@ import org.igye.logic.graph.common.{GraphTraverser, Node, NodeProcessor}
 import org.igye.logic.graph.queryengine._
 
 class QueryEngine(queryPr: Predicate, predicateStorage: PredicateStorage, ruleStorage: RuleStorage) extends NodeProcessor {
-    private var nodeCnt: Int = 0
+    val traverser = new GraphTraverser(Set(RootNode(queryPr)), this)
 
-    val traverser = new GraphTraverser(List(RootNode(queryPr, nextNodeCnt())), this)
-
-    private def nextNodeCnt() = {
-        nodeCnt += 1
-        nodeCnt
-    }
-
-    def execute(): List[Result] = {
+    def execute(): Set[Result] = {
         while (traverser.step()){}
         traverser.getResults().map(_.asInstanceOf[Result])
     }
 
     def getProcessedNodes = traverser.getProcessedNodes
 
-    override def isResult(node: Node): Boolean = node.isInstanceOf[Result]
+    override def isResult(state: Any): Boolean = state.isInstanceOf[Result]
 
-    override def process(node: Node): List[Node] = node match {
-        case r: Result => Nil
+    override def process(state: Any): Set[Any] = state match {
+        case r: Result => Set()
         case rn: RootNode =>
-            predicateStorage.getTrueStatements.flatMap(createSubstitution(rn.query, _)).map(Result(rn, _, nextNodeCnt())):::
+            (predicateStorage.getTrueStatements.flatMap(createSubstitution(rn.query, _)).map(Result(_)) :::
             ruleStorage.getSubRules.flatMap{sr=>
                 createSubstitution(rn.query, sr.result).filter(gateFilter).map{subs=>
-                    RuleHead(rn, invertAndRemovePlaceholders(subs), sr, createGate(subs), nextNodeCnt())
+                    RuleHead(invertAndRemovePlaceholders(subs), sr, createGate(subs))
                 }
-            }
+            }).toSet
         case rh: RuleHead =>
-            predicateStorage.getTrueStatements.flatMap(createSubstitution(rh.query.head, _)).map{sbt=>
+            (predicateStorage.getTrueStatements.flatMap(createSubstitution(rh.query.head, _)).map{sbt=>
                 if (rh.query.tail.isEmpty) {
                     createNodeFromTerminalRuleNode(rh, sbt)
                 } else {
                     val newCollectedSubst = sbt.concat(rh.collectedSubsts)
-                    RuleTail(rh, newCollectedSubst, rh.query.tail.map(applySubstitution(_, newCollectedSubst)), nextNodeCnt())
+                    RuleTail(rh.rule, newCollectedSubst, rh.query.tail.map(applySubstitution(_, newCollectedSubst)))
                 }
             }:::
             ruleStorage.getSubRules.flatMap{sr=>
                 createSubstitution(rh.query.head, sr.result).filter(gateFilter).map{subs=>
-                    RuleHead(rh, invertAndRemovePlaceholders(subs), sr, createGate(subs), nextNodeCnt())
+                    RuleHead(invertAndRemovePlaceholders(subs), sr, createGate(subs))
                 }
-            }
+            }).toSet
         case rt: RuleTail =>
-            predicateStorage.getTrueStatements.flatMap(createSubstitution(rt.query.head, _)).map{sbt=>
+            (predicateStorage.getTrueStatements.flatMap(createSubstitution(rt.query.head, _)).map{sbt=>
                 if (rt.query.tail.isEmpty) {
                     createNodeFromTerminalRuleNode(rt, sbt.concat(rt.collectedSubsts))
                 } else {
                     val newCollectedSubst = sbt.concat(rt.collectedSubsts)
-                    RuleTail(rt, newCollectedSubst, rt.query.tail.map(applySubstitution(_, newCollectedSubst)), nextNodeCnt())
+                    RuleTail(rt.rule, newCollectedSubst, rt.query.tail.map(applySubstitution(_, newCollectedSubst)))
                 }
             }:::
             ruleStorage.getSubRules.flatMap{sr=>
                 createSubstitution(rt.query.head, sr.result).filter(gateFilter).map{subs=>
-                    RuleHead(rt, invertAndRemovePlaceholders(subs), sr, createGate(subs), nextNodeCnt())
+                    RuleHead(invertAndRemovePlaceholders(subs), sr, createGate(subs))
                 }
-            }
+            }).toSet
     }
 
     private def gateFilter(subs: Substitution): Boolean = {
@@ -86,42 +79,54 @@ class QueryEngine(queryPr: Predicate, predicateStorage: PredicateStorage, ruleSt
         )
     }
 
-    private def findParentNodeToContinueWorkWith(node: RuleNode, collectedSubsts: Substitution): (Node, Substitution) = node match {
-        case rt: RuleTail => findParentNodeToContinueWorkWith(rt.parent, collectedSubsts)
+    private def parentOf(rt: RuleTail) = traverser.getParent(rt).get.asInstanceOf[RuleNode]
+    private def parentOf(rh: RuleHead) = traverser.getParent(rh).get
+
+    private def findParentStateToContinueWorkWith(terminalRuleNode: RuleNode,
+                                                  rule: SubRule, collectedSubsts: Substitution): (Any, Substitution) = terminalRuleNode match {
+        case rt: RuleTail => findParentStateToContinueWorkWith(parentOf(rt), rule, collectedSubsts)
+        case rh: RuleHead if (rule != null && rule != rh.rule) =>
+            findParentStateToContinueWorkWith(parentOf(rh).asInstanceOf[RuleNode], rule, collectedSubsts)
         case rh: RuleHead =>
             val newCollectedSubstitutions = rh.gate.replaceValues(collectedSubsts)
-            rh.parent match {
+            parentOf(rh) match {
                 case rt: RuleTail =>
                     if (rt.query.tail.nonEmpty) {
                         (rt, newCollectedSubstitutions)
                     } else {
-                        findParentNodeToContinueWorkWith(rt, newCollectedSubstitutions.concat(rt.collectedSubsts))
+                        findParentStateToContinueWorkWith(rt, rt.rule, newCollectedSubstitutions.concat(rt.collectedSubsts))
                     }
                 case rh: RuleHead =>
                     if (rh.rule.conjSet.tail.nonEmpty) {
                         (rh, newCollectedSubstitutions)
                     } else {
-                        findParentNodeToContinueWorkWith(rh, newCollectedSubstitutions)
+                        findParentStateToContinueWorkWith(rh, null, newCollectedSubstitutions)
                     }
                 case rn: RootNode => (rn, newCollectedSubstitutions)
             }
     }
 
-    private def createNodeFromTerminalRuleNode(terminalRuleNode: RuleNode, overallSubst: Substitution): Node with Product with Serializable = {
+    private def getRule(ruleNode: RuleNode) = ruleNode match {
+        case rh: RuleHead => null
+        case rt: RuleTail => rt.rule
+    }
+
+    private def createNodeFromTerminalRuleNode(terminalRuleNode: RuleNode, overallSubst: Substitution) = {
 //        println("----------------------------------------------------------------------")
 //        println(ResultUtils.explain(getProcessedNodes, List(terminalRuleNode)))
-        findParentNodeToContinueWorkWith(terminalRuleNode, overallSubst) match {
-            case (rn: RootNode, s: Substitution) => Result(terminalRuleNode, s, nextNodeCnt())
+        findParentStateToContinueWorkWith(terminalRuleNode, getRule(terminalRuleNode), overallSubst) match {
+            case (rn: RootNode, s: Substitution) => Result(s)
             case (rh: RuleHead, s: Substitution) =>
-                RuleTail(rh, s, rh.query.tail.map(applySubstitution(_, s)), nextNodeCnt())
+                RuleTail(rh.rule, s, rh.query.tail.map(applySubstitution(_, s)))
             case (rt: RuleTail, s: Substitution) =>
                 val newCollectedSubst = rt.collectedSubsts.concat(s)
                 RuleTail(
-                    rt,
+                    rt.rule,
                     newCollectedSubst,
-                    rt.query.tail.map(applySubstitution(_, newCollectedSubst)),
-                    nextNodeCnt()
+                    rt.query.tail.map(applySubstitution(_, newCollectedSubst))
                 )
         }
     }
+
+    override def getNextState(unprocessedStates: List[Any]): Any = unprocessedStates.last
 }

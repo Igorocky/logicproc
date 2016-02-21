@@ -5,8 +5,8 @@ import org.igye.logic.graph.common.{GraphTraverser, Node, NodeProcessor}
 import org.igye.logic.graph.transfengine.{PossibleTransformation, TransfResult}
 import org.igye.logic.predicates.common.{eqTo, eqToBid}
 
-class TransformationEngine(startPr: Predicate, predicateStorage: PredicateStorage, ruleStorage: RuleStorage) extends NodeProcessor {
-    private var nodeCnt: Int = 0
+class TransformationEngine(startPr: Predicate, predicateStorage: PredicateStorage, ruleStorage: RuleStorage) /*extends NodeProcessor*/ {
+    /*private var nodeCnt: Int = 0
     private val traverser = new GraphTraverser(List(TransfResult(null, startPr, nextNodeCnt())), this)
 
     private def nextNodeCnt() = {
@@ -94,5 +94,5 @@ class TransformationEngine(startPr: Predicate, predicateStorage: PredicateStorag
     private def log(msg: String): Unit = {
 //        println("-----------------------------------------")
         println("log: " + msg)
-    }
+    }*/
 }

@@ -26,7 +26,7 @@ class QueryEngineTest {
         )
         implicit val rules = new RuleStorage()
         val qRes = new QueryEngine((X is E) & (X is D), stor, rules).execute().map(_.subst.flattenMap)
-        Assert.assertEquals(2, qRes.length)
+        Assert.assertEquals(2, qRes.size)
         Assert.assertTrue(qRes.contains(Map(X -> A)))
         Assert.assertTrue(qRes.contains(Map(X -> C)))
     }
@@ -48,7 +48,7 @@ class QueryEngineTest {
         )
         val query = M is brother of N
         val qe = new QueryEngine(query, predicates, rules)
-        val qRes = qe.execute().map(res => applySubstitution(query, res.subst))
+        val qRes = qe.execute().map(res => applySubstitution(query, res.subst)).toList
         Assert.assertEquals(1, qRes.length)
         Assert.assertEquals(Igor is brother of Ira, qRes(0))
     }
@@ -82,7 +82,7 @@ class QueryEngineTest {
         )
         val query = M is brother of N
         val qe = new QueryEngine(query, predicates, rules)
-        val qRes = qe.execute().map(res => applySubstitution(query, res.subst))
+        val qRes = qe.execute().map(res => applySubstitution(query, res.subst)).toList
         Assert.assertEquals(1, qRes.length)
         Assert.assertEquals(Igor is brother of Ira, qRes(0))
     }

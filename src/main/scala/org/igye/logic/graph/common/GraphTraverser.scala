@@ -1,36 +1,42 @@
 package org.igye.logic.graph.common
 
-class GraphTraverser(initialNodes: List[Node], proc: NodeProcessor) {
-    private var nonProcessedNodes = initialNodes.sortWith(_ < _)
-    private var processedNodes = List[Node]()
-    private var results = initialNodes.filter(proc.isResult(_))
+class GraphTraverser(initialStates: Set[Any], proc: NodeProcessor) {
+    private var nonProcessedNodes: List[Node] = initialStates.map(Node(null, _)).toList
+    private var processedNodes: List[Node] = List[Node]()
+    private var results: Set[Any] = initialStates.filter(proc.isResult)
 
-    def getResults() = {
+    def getResults(): Set[Any] = {
         val res = results
-        results = Nil
+        results = Set()
         res
     }
 
     def step(): Boolean = {
         if (nonProcessedNodes.nonEmpty) {
-            val curNode = nonProcessedNodes.head
-            nonProcessedNodes = nonProcessedNodes.tail
-            processedNodes ::= curNode
-            val newNodes = proc.process(curNode).filter(newNode=>
-                !processedNodes.contains(newNode) && !nonProcessedNodes.contains(newNode)
+            val currState = proc.getNextState(nonProcessedNodes.map(_.value))
+            val (nonProcessedNodesVal, currNode) = nonProcessedNodes.foldLeft((List[Node](), null: Node)){
+                case ((list, currNode), node) => if (node.value == currState) (list, node) else (node::list, currNode)
+            }
+            nonProcessedNodes = nonProcessedNodesVal.reverse
+            processedNodes ::= currNode
+            val newStates = proc.process(currState).filter(newState=>
+                !processedNodes.exists(_.value == newState) && !nonProcessedNodes.exists(_.value == newState)
             )
-            newNodes.foreach{newNode=>
-                if (proc.isResult(newNode)) {
-                    results ::= newNode
+            newStates.foreach{newState=>
+                if (proc.isResult(newState)) {
+                    results += newState
                 }
             }
-            nonProcessedNodes :::= newNodes
-            nonProcessedNodes = nonProcessedNodes.sortWith(_ < _)
+            nonProcessedNodes :::= newStates.toList.map(Node(currNode, _))
             true
         } else {
             false
         }
     }
 
-    def getProcessedNodes = processedNodes
+    def getProcessedNodes: List[Node] = processedNodes
+
+    def getParent(state: Any): Option[Any] = {
+        processedNodes.find(_.value == state).map(_.parent.value)
+    }
 }
