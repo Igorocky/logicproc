@@ -129,4 +129,6 @@ class QueryEngine(queryPr: Predicate, predicateStorage: PredicateStorage, ruleSt
     }
 
     override def getNextState(unprocessedStates: List[Any]): Any = unprocessedStates.last
+
+    override def isAllowed(state: Any): Boolean = true
 }

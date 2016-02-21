@@ -5,7 +5,9 @@ import org.igye.logic.graph.common.{GraphTraverser, Node, NodeProcessor}
 import org.igye.logic.graph.transfengine.{PossibleTransformation, TransfResult}
 import org.igye.logic.predicates.common.{eqTo, eqToBid}
 
-class TransformationEngine(startPr: Predicate, predicateStorage: PredicateStorage, ruleStorage: RuleStorage) extends NodeProcessor {
+class TransformationEngine(startPr: Predicate,
+                           predicateStorage: PredicateStorage, ruleStorage: RuleStorage,
+                          restrictions: List[Any => Boolean]) extends NodeProcessor {
     private val traverser = new GraphTraverser(Set(TransfResult(startPr)), this)
 
     def next2(): Option[Set[Predicate]] = {
@@ -87,8 +89,10 @@ class TransformationEngine(startPr: Predicate, predicateStorage: PredicateStorag
 
     private def log(msg: String): Unit = {
 //        println("-----------------------------------------")
-        println("log: " + msg)
+//        println("log: " + msg)
     }
 
     override def getNextState(unprocessedStates: List[Any]): Any = unprocessedStates.last
+
+    override def isAllowed(state: Any): Boolean = !restrictions.exists(_(state))
 }

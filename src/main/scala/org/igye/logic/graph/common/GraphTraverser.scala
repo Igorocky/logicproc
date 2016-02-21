@@ -20,7 +20,9 @@ class GraphTraverser(initialStates: Set[Any], proc: NodeProcessor) {
             nonProcessedNodes = nonProcessedNodesVal.reverse
             processedNodes ::= currNode
             val newStates = proc.process(currState).filter(newState=>
-                !processedNodes.exists(_.value == newState) && !nonProcessedNodes.exists(_.value == newState)
+                !processedNodes.exists(_.value == newState)
+                    && !nonProcessedNodes.exists(_.value == newState)
+                    && proc.isAllowed(newState)
             )
             newStates.foreach{newState=>
                 if (proc.isResult(newState)) {
