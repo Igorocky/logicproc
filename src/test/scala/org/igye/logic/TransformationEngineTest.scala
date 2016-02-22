@@ -63,10 +63,10 @@ class TransformationEngineTest {
       Assert.assertFalse(res.get.contains(_0))
       res.foreach(_.foreach{pr =>
         cnt += 1
-//        println(s"res[$cnt]>>> " + pr + s" by ${eng.getRule(pr)}")
+        println(s"res[$cnt]>>> " + pr /*+ s" by ${eng.getRule(pr)}"*/)
       })
       res = eng.next2()
     }
-    Assert.assertEquals(1587, overallRes.size)
+    Assert.assertEquals(2951, overallRes.size)
   }
 }

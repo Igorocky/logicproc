@@ -93,19 +93,7 @@ class TransformationEngine(startPr: Predicate,
 //        println("log: " + msg)
     }
 
-    override def getNextState(unprocessedStates: List[Any]): Any =
-        unprocessedStates.map{
-          case pt: PossibleTransformation =>
-            val parent = traverser.getParent(pt)
-            (pt, parent.map(p => PredicateUtils.calcDepth(p.asInstanceOf[TransfResult].predicate)).getOrElse(-1))
-          case tr: TransfResult => (tr, 1000000)
-        }.foldLeft((unprocessedStates.head, 1000000)){
-          case ((r, rd), (s, sd)) => if (sd < rd) {
-            (s, sd)
-          } else {
-            (r, rd)
-          }
-        }._1
+    override def getNextState(unprocessedStates: List[Any]): Any = unprocessedStates.head
 
     override def isAllowed(state: Any): Boolean = !restrictions.exists(_(state))
 
