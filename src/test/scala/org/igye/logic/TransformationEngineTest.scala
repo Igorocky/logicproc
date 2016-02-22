@@ -1,6 +1,5 @@
 package org.igye.logic
 
-import jdk.nashorn.internal.ir.annotations.Ignore
 import org.igye.logic.LogicalOperationsOnPredicate.predicateToLogicalOperationsOnPredicate
 import org.igye.logic.graph.transfengine.TransfResult
 import org.igye.logic.predicates.PredicateUtils
@@ -8,7 +7,6 @@ import org.igye.logic.predicates.math.{addInv, mulInv}
 import org.junit.{Assert, Test}
 
 class TransformationEngineTest {
-  @Ignore
   @Test
   def next(): Unit = {
     val R = StringPredicate("R")
@@ -25,6 +23,7 @@ class TransformationEngineTest {
       _0 belongsTo R
       , _1 belongsTo Rsub0
       , a belongsTo R
+      , a belongsTo Rsub0
     )
 
     val rules = new RuleStorage(
@@ -64,10 +63,10 @@ class TransformationEngineTest {
       Assert.assertFalse(res.get.contains(_0))
       res.foreach(_.foreach{pr =>
         cnt += 1
-        println(s"res[$cnt]>>> " + pr + s" by ${eng.getRule(pr)}")
+//        println(s"res[$cnt]>>> " + pr + s" by ${eng.getRule(pr)}")
       })
       res = eng.next2()
     }
-    Assert.assertEquals(49, overallRes.size)
+    Assert.assertEquals(1587, overallRes.size)
   }
 }

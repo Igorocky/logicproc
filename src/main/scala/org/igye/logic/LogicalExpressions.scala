@@ -64,7 +64,7 @@ object LogicalExpressions {
                     fromPr.getClass != toPr.getClass ||
                     fromPr.orderedChildren.isEmpty && fromPr != toPr) {
                     None
-                } else if (fromPr == toPr) {
+                } else if (fromPr == toPr && fromPr.orderedChildren.isEmpty) {
                     Some(Substitution(map = Map(), parent))
                 } else {
                     fromPr.orderedChildren.zip(toPr.orderedChildren).foldLeft(parent){

@@ -21,7 +21,7 @@ class TransformationEngine(startPr: Predicate,
 
     private def createPossibleTransformation(parentTransfRes: TransfResult,
                                              rule: SubRule, eqLeft: Predicate): List[PossibleTransformation] = {
-        log("createPossibleTransformation for " + parentTransfRes.predicate + " using " + rule + " and eqLeft " + eqLeft)
+//        log("createPossibleTransformation for " + parentTransfRes.predicate + " using " + rule + " and eqLeft " + eqLeft)
         val res = findSubStructures(parentTransfRes.predicate, eqLeft).map {
             case (foundSubStructure, subs) =>
                 PossibleTransformation(
@@ -31,7 +31,7 @@ class TransformationEngine(startPr: Predicate,
                     subs = subs
                 )
         }
-        log("results in " + res)
+//        log("results in " + res)
         res
     }
 
@@ -76,7 +76,7 @@ class TransformationEngine(startPr: Predicate,
             val condition = posTr.rule.conjSet.map(applySubstitution(_, posTr.subs))
             log("querying for " + condition)
             val isTrue = isSeqTrue(condition)
-            log(condition + " isTrue = " + isTrue)
+            log(condition + " isTrue = " + isTrue.map(_.flattenMap))
             val eqRight = posTr.rule.result match {
                 case e: eqTo => e.right
                 case e: eqToBid => if (posTr.eqLeft == e.left) e.right else e.left
